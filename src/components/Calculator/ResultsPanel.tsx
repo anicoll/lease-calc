@@ -1,6 +1,10 @@
+import { useState } from 'react'
 import type { LeaseResult } from '../../types'
 import { ResultRow } from '../ui/ResultRow'
 import { SectionCard } from '../ui/SectionCard'
+
+type PayPeriod = 'monthly' | 'fortnightly'
+const PERIODS_PER_YEAR: Record<PayPeriod, number> = { monthly: 12, fortnightly: 26 }
 
 function fmt(n: number): string {
   return new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', maximumFractionDigits: 0 }).format(n)
@@ -15,6 +19,12 @@ interface ResultsPanelProps {
 }
 
 export function ResultsPanel({ result }: ResultsPanelProps) {
+  const [period, setPeriod] = useState<PayPeriod>('monthly')
+  const divisor = PERIODS_PER_YEAR[period]
+  const periodLabel = period === 'monthly' ? 'monthly' : 'fortnightly'
+
+  const perPeriod = (annual: number) => fmt(annual / divisor)
+
   return (
     <div className="flex flex-col gap-4">
       {/* FBT Status Banner */}
@@ -31,26 +41,47 @@ export function ResultsPanel({ result }: ResultsPanelProps) {
           : '⚠ FBT applies to this vehicle. A post-tax ECM contribution is required to eliminate FBT.'}
       </div>
 
-      {/* Monthly Summary */}
-      <SectionCard title="Monthly Payments">
+      {/* Payment period summary */}
+      <SectionCard title="Payment Summary">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-xs text-gray-500">Show payments as</span>
+          <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+            {(['monthly', 'fortnightly'] as PayPeriod[]).map(p => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => setPeriod(p)}
+                className={[
+                  'px-3 py-1 rounded-md text-xs font-medium transition-colors',
+                  period === p
+                    ? 'bg-white text-blue-700 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700',
+                ].join(' ')}
+              >
+                {p.charAt(0).toUpperCase() + p.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <ResultRow
-          label="Pre-tax salary sacrifice (monthly)"
-          value={fmt(result.monthlyPreTaxDeduction)}
+          label={`Pre-tax salary sacrifice (${periodLabel})`}
+          value={perPeriod(result.annualPreTaxDeduction)}
           hint="Deducted from gross salary before income tax is calculated"
         />
         {!result.fbtExempt && (
           <ResultRow
-            label="Post-tax ECM contribution (monthly)"
-            value={fmt(result.monthlyPostTaxDeduction)}
+            label={`Post-tax ECM contribution (${periodLabel})`}
+            value={perPeriod(result.annualPostTaxDeduction)}
             negative
             hint="Required after-tax contribution to eliminate FBT (Employee Contribution Method)"
           />
         )}
         <ResultRow
-          label="Effective out-of-pocket (monthly)"
-          value={fmt(result.effectiveMonthlyOutOfPocket)}
+          label={`Effective out-of-pocket (${periodLabel})`}
+          value={perPeriod(result.netAnnualCost)}
           highlight
-          hint="Net cost after income tax savings. Does not include upfront LCT or stamp duty."
+          hint="Net cost after income tax savings"
         />
       </SectionCard>
 
