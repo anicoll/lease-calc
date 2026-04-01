@@ -60,7 +60,6 @@ export interface AnalyserInputs {
   vehicleBaseValue: number
   termRemainingMonths: number
   monthlyPreTax: number
-  monthlyPostTax: number
   monthlyManagementFee: number
   monthlyRunningCosts: number
   benchmarkRate: number

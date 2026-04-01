@@ -34,8 +34,25 @@ export function InputForm({ onCalculate }: InputFormProps) {
 
   const atoResidual = ATO_RESIDUALS[parseInt(termYears)] ?? ATO_RESIDUALS[5]!
 
+  const [errors, setErrors] = useState<Record<string, string>>({})
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+
+    const newErrors: Record<string, string> = {}
+    const salaryVal = parseFloat(grossSalary)
+    const vehicleVal = parseFloat(vehicleCost)
+    const residualVal = useCustomResidual && customResidual ? parseFloat(customResidual) : null
+    const loanResidualVal = showLoanComparison ? parseFloat(loanComparisonResidual) || 0 : 0
+
+    if (!salaryVal || salaryVal <= 0) newErrors.grossSalary = 'Please enter a gross salary greater than $0.'
+    if (!vehicleVal || vehicleVal <= 0) newErrors.vehicleCost = 'Please enter a vehicle price greater than $0.'
+    if (residualVal !== null && residualVal > 100) newErrors.customResidual = 'Residual cannot exceed 100%.'
+    if (showLoanComparison && loanResidualVal >= vehicleVal) newErrors.loanComparisonResidual = 'Balloon cannot be equal to or greater than the vehicle price.'
+
+    setErrors(newErrors)
+    if (Object.keys(newErrors).length > 0) return
+
     const multiplier = runningCostPeriod === 'monthly' ? 12 : 1
     const runningCosts: RunningCosts = {
       fuel: (parseFloat(fuel) || 0) * multiplier,
@@ -71,7 +88,7 @@ export function InputForm({ onCalculate }: InputFormProps) {
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <SectionCard title="Your Details">
         <div className="flex flex-col gap-3">
-          <InputField label="Annual gross salary" hint="Before tax, in Australian dollars">
+          <InputField label="Annual gross salary" hint="Before tax, in Australian dollars" error={errors.grossSalary}>
             <div className="relative">
               <span className="absolute left-3 top-2 text-gray-400 text-sm">$</span>
               <input
@@ -96,7 +113,7 @@ export function InputForm({ onCalculate }: InputFormProps) {
 
       <SectionCard title="Vehicle">
         <div className="flex flex-col gap-3">
-          <InputField label="Vehicle purchase price (drive-away)" hint="Total drive-away price including GST, LCT and stamp duty">
+          <InputField label="Vehicle purchase price (drive-away)" hint="Total drive-away price including GST, LCT and stamp duty" error={errors.vehicleCost}>
             <div className="relative">
               <span className="absolute left-3 top-2 text-gray-400 text-sm">$</span>
               <input
@@ -167,6 +184,7 @@ export function InputForm({ onCalculate }: InputFormProps) {
           <InputField
             label="Residual value"
             hint={`ATO minimum for ${termYears}-year lease: ${(atoResidual * 100).toFixed(2)}%`}
+            error={errors.customResidual}
           >
             <div className="flex items-center gap-2">
               <label className="flex items-center gap-2 text-sm text-gray-600">
@@ -293,7 +311,7 @@ export function InputForm({ onCalculate }: InputFormProps) {
                 </div>
               </InputField>
 
-              <InputField label="Balloon / residual" hint="Leave at $0 for a standard fully-amortising loan">
+              <InputField label="Balloon / residual" hint="Leave at $0 for a standard fully-amortising loan" error={errors.loanComparisonResidual}>
                 <div className="relative">
                   <span className="absolute left-3 top-2 text-gray-400 text-sm">$</span>
                   <input
