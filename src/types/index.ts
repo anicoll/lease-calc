@@ -76,3 +76,33 @@ export interface AnalyserResult {
   annualManagementFee: number
   residualValue: number
 }
+
+export interface EarlyTerminationInputs {
+  vehicleBaseValue: number
+  annualInterestRate: number        // decimal (e.g. 0.075 for 7.5%)
+  originalTermMonths: number
+  monthsElapsed: number
+  residualValue: number
+  monthlyLeasePayment: number | null  // null → derive via pmt()
+  monthlyManagementFee: number        // 0 if not applicable
+  terminationFee: number              // flat provider exit fee; 0 if none
+  currentMarketValue: number | null   // null → skip equity calculation
+  vehicleType: VehicleType
+  phevDeliveredBeforeApril2025: boolean
+  terminationDate: Date
+}
+
+export interface EarlyTerminationResult {
+  monthsRemaining: number
+  derivedMonthlyPayment: number
+  financePayout: number
+  remainingManagementFees: number
+  terminationFee: number
+  vehicleEquity: number | null
+  isUnderwater: boolean | null
+  fbtExempt: boolean
+  partialYearFbtPayable: number
+  daysUsedInFbtYear: number
+  ecmAccountNote: string
+  totalFinancialExposure: number | null
+}

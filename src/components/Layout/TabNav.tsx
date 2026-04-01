@@ -1,4 +1,10 @@
-type Tab = 'calculator' | 'analyser'
+export type Tab = 'calculator' | 'analyser' | 'termination'
+
+const TAB_LABELS: Record<Tab, string> = {
+  calculator: 'New Lease Calculator',
+  analyser: 'Analyse My Lease',
+  termination: 'Early Termination',
+}
 
 interface TabNavProps {
   activeTab: Tab
@@ -9,7 +15,7 @@ export function TabNav({ activeTab, onChange }: TabNavProps) {
   return (
     <div className="flex border-b border-gray-200 bg-white">
       <div className="max-w-2xl mx-auto w-full flex">
-        {(['calculator', 'analyser'] as Tab[]).map((tab) => (
+        {(['calculator', 'analyser', 'termination'] as Tab[]).map((tab) => (
           <button
             key={tab}
             onClick={() => onChange(tab)}
@@ -20,7 +26,7 @@ export function TabNav({ activeTab, onChange }: TabNavProps) {
                 : 'text-gray-500 hover:text-gray-700',
             ].join(' ')}
           >
-            {tab === 'calculator' ? 'New Lease Calculator' : 'Analyse My Lease'}
+            {TAB_LABELS[tab]}
           </button>
         ))}
       </div>

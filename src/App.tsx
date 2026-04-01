@@ -1,19 +1,22 @@
 import { useState } from 'react'
-import type { AnalyserInputs, AnalyserResult, LeaseInputs, LeaseResult } from './types'
+import type { AnalyserInputs, AnalyserResult, EarlyTerminationInputs, EarlyTerminationResult, LeaseInputs, LeaseResult } from './types'
 import { Header } from './components/Layout/Header'
 import { TabNav } from './components/Layout/TabNav'
+import type { Tab } from './components/Layout/TabNav'
 import { InputForm } from './components/Calculator/InputForm'
 import { ResultsPanel } from './components/Calculator/ResultsPanel'
 import { AnalyserForm } from './components/LeaseAnalyser/AnalyserForm'
 import { AnalyserResults } from './components/LeaseAnalyser/AnalyserResults'
+import { TerminationForm } from './components/EarlyTermination/TerminationForm'
+import { TerminationResults } from './components/EarlyTermination/TerminationResults'
 import { calculateNovatedLease, analyseExistingLease } from './lib/calculations/novatedLease'
-
-type Tab = 'calculator' | 'analyser'
+import { calculateEarlyTermination } from './lib/calculations/earlyTermination'
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('calculator')
   const [leaseResult, setLeaseResult] = useState<LeaseResult | null>(null)
   const [analyserResult, setAnalyserResult] = useState<AnalyserResult | null>(null)
+  const [terminationResult, setTerminationResult] = useState<EarlyTerminationResult | null>(null)
 
   function handleCalculate(inputs: LeaseInputs) {
     setLeaseResult(calculateNovatedLease(inputs))
@@ -21,6 +24,10 @@ export default function App() {
 
   function handleAnalyse(inputs: AnalyserInputs) {
     setAnalyserResult(analyseExistingLease(inputs))
+  }
+
+  function handleTermination(inputs: EarlyTerminationInputs) {
+    setTerminationResult(calculateEarlyTermination(inputs))
   }
 
   return (
@@ -34,10 +41,15 @@ export default function App() {
             <InputForm onCalculate={handleCalculate} />
             {leaseResult && <ResultsPanel result={leaseResult} />}
           </>
-        ) : (
+        ) : activeTab === 'analyser' ? (
           <>
             <AnalyserForm onAnalyse={handleAnalyse} />
             {analyserResult && <AnalyserResults result={analyserResult} />}
+          </>
+        ) : (
+          <>
+            <TerminationForm onCalculate={handleTermination} />
+            {terminationResult && <TerminationResults result={terminationResult} />}
           </>
         )}
 
