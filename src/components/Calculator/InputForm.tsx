@@ -16,6 +16,9 @@ export function InputForm({ onCalculate }: InputFormProps) {
   const [vehicleType, setVehicleType] = useState<VehicleType>('BEV')
   const [phevBefore, setPhevBefore] = useState(true)
   const [interestRate, setInterestRate] = useState('7.5')
+  const [showLoanComparison, setShowLoanComparison] = useState(false)
+  const [loanComparisonRate, setLoanComparisonRate] = useState('9.0')
+  const [loanComparisonResidual, setLoanComparisonResidual] = useState('0')
   const [termYears, setTermYears] = useState('5')
   const [useCustomResidual, setUseCustomResidual] = useState(false)
   const [customResidual, setCustomResidual] = useState('')
@@ -50,6 +53,9 @@ export function InputForm({ onCalculate }: InputFormProps) {
       vehicleType,
       phevDeliveredBeforeApril2025: phevBefore,
       interestRate: parseFloat(interestRate) / 100 || 0,
+      showLoanComparison,
+      loanComparisonRate: showLoanComparison ? (parseFloat(loanComparisonRate) / 100 || 0) : 0,
+      loanComparisonResidual: showLoanComparison ? (parseFloat(loanComparisonResidual) || 0) : 0,
       termYears: parseInt(termYears) || 5,
       customResidualPercent,
       annualManagementFee: (parseFloat(managementFee) || 0) * 12,
@@ -144,7 +150,6 @@ export function InputForm({ onCalculate }: InputFormProps) {
                 min="0"
                 max="30"
                 step="any"
-               
                 required
               />
               <span className="absolute right-3 top-2 text-gray-400 text-sm">%</span>
@@ -246,6 +251,62 @@ export function InputForm({ onCalculate }: InputFormProps) {
               </div>
             </InputField>
           ))}
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Compare with Regular Financing">
+        <div className="flex flex-col gap-3">
+          <label className="flex items-center gap-3 cursor-pointer">
+            <div
+              onClick={() => setShowLoanComparison(v => !v)}
+              className={[
+                'relative w-10 h-6 rounded-full transition-colors flex-shrink-0 cursor-pointer',
+                showLoanComparison ? 'bg-blue-600' : 'bg-gray-300',
+              ].join(' ')}
+            >
+              <span className={[
+                'absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform',
+                showLoanComparison ? 'translate-x-5' : 'translate-x-1',
+              ].join(' ')} />
+            </div>
+            <span className="text-sm text-gray-700">Compare against a regular car loan</span>
+          </label>
+
+          {showLoanComparison && (
+            <>
+              <p className="text-xs text-gray-500">
+                Running costs are assumed to be the same. No management fee applies to the regular loan.
+              </p>
+              <InputField label="Loan interest rate" hint="Personal / car loan rate">
+                <div className="relative">
+                  <input
+                    type="number"
+                    className={inputCls + ' pr-8'}
+                    value={loanComparisonRate}
+                    onChange={e => setLoanComparisonRate(e.target.value)}
+                    min="0"
+                    max="30"
+                    step="any"
+                    required
+                  />
+                  <span className="absolute right-3 top-2 text-gray-400 text-sm">%</span>
+                </div>
+              </InputField>
+
+              <InputField label="Balloon / residual" hint="Leave at $0 for a standard fully-amortising loan">
+                <div className="relative">
+                  <span className="absolute left-3 top-2 text-gray-400 text-sm">$</span>
+                  <input
+                    type="number"
+                    className={inputCls + ' pl-6'}
+                    value={loanComparisonResidual}
+                    onChange={e => setLoanComparisonResidual(e.target.value)}
+                    min="0"
+                  />
+                </div>
+              </InputField>
+            </>
+          )}
         </div>
       </SectionCard>
 

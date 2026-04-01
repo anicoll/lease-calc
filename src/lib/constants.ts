@@ -43,53 +43,65 @@ export const LITO_PHASE_OUT_2_END   = 66_667
 export const LITO_PHASE_OUT_2_RATE  = 0.005
 
 // ── State Stamp Duty ────────────────────────────────────────────────────────
-// Rates approximate for 2024-25. EV exemptions noted where applicable.
-// DISCLAIMER: These rates change — users should verify with their state revenue office.
+// Rates are estimates based on published 2024-25 schedules. Thresholds and
+// concessions change — always verify with your state revenue office.
 export function calculateStampDuty(
   vehiclePrice: number,
   vehicleType: VehicleType,
   state: AustralianState,
 ): number {
-  const isEV = vehicleType === 'BEV'
-
   switch (state) {
     case 'NSW':
-      // EVs: 2% (reduced rate, not full exemption). Standard: 3% up to $45k, 5% above.
-      if (isEV) return vehiclePrice * 0.02
+      // No EV concession. $3/$100 up to $45k; $1,350 + $5/$100 above $45k.
       if (vehiclePrice <= 45_000) return vehiclePrice * 0.03
       return 1_350 + (vehiclePrice - 45_000) * 0.05
 
     case 'VIC':
-      // VIC abolished stamp duty for EVs/PHEVs in 2021
-      if (vehicleType === 'BEV' || vehicleType === 'PHEV') return 0
+      // EV/PHEV: $8.40 per $200 (4.2%). ICE: higher brackets up to $18/$200.
+      // Road user charge may also apply separately for EVs.
+      if (vehicleType === 'BEV' || vehicleType === 'PHEV') return vehiclePrice * 0.042
       return vehiclePrice * 0.055
 
     case 'QLD':
-      // QLD: EVs exempt. Standard: 3% up to $100k, 5% above.
-      if (isEV) return 0
+      // EV/PHEV: $2/$100 (no full exemption). ICE: $3/$100 ≤$100k, $5/$100 above
+      // (assumes 4-cyl; higher-cylinder vehicles attract higher rates).
+      if (vehicleType === 'BEV' || vehicleType === 'PHEV') return vehiclePrice * 0.02
       if (vehiclePrice <= 100_000) return vehiclePrice * 0.03
       return 3_000 + (vehiclePrice - 100_000) * 0.05
 
     case 'SA':
-      // SA: flat 4%, no EV exemption
-      return vehiclePrice * 0.04
+      // Marginal tiered rates on amount within each bracket. No EV concession.
+      // <$1k: $5 min; $1k–$2k: $10 + $2/$100 over $1k; $2k–$3k: $30 + $3/$100 over $2k;
+      // >$3k: $60 + $4/$100 over $3k.
+      if (vehiclePrice < 1_000) return 5
+      if (vehiclePrice < 2_000) return 10 + (vehiclePrice - 1_000) * 0.02
+      if (vehiclePrice < 3_000) return 30 + (vehiclePrice - 2_000) * 0.03
+      return 60 + (vehiclePrice - 3_000) * 0.04
 
     case 'WA':
-      // WA: EVs exempt. Standard: 2.75% flat (simplified).
-      if (isEV) return 0
-      return vehiclePrice * 0.0275
+      // No EV concession. Tiered: ≤$25k: 2.75%; $25k–$50k: formula ~4%; >$50k: 6.5%.
+      if (vehiclePrice <= 25_000) return vehiclePrice * 0.0275
+      if (vehiclePrice <= 50_000) return 687.5 + (vehiclePrice - 25_000) * 0.04
+      return vehiclePrice * 0.065
 
     case 'TAS':
-      // TAS: flat 3%, no EV exemption
-      return vehiclePrice * 0.03
+      // ≤$600: $20 flat; $600–$35k: $3/$100; $35k–$40k: $1,050 + $11/$100 of excess;
+      // >$40k: $4/$100.
+      if (vehiclePrice <= 600) return 20
+      if (vehiclePrice < 35_000) return vehiclePrice * 0.03
+      if (vehiclePrice < 40_000) return 1_050 + (vehiclePrice - 35_000) * 0.11
+      return vehiclePrice * 0.04
 
     case 'ACT':
-      // ACT: EVs exempt. Standard: ~3%.
-      if (isEV) return 0
+      // A-rated (BEV): exempt. B-rated (PHEV): ~$2/$100. C/non-rated (ICE): ~$3/$100.
+      if (vehicleType === 'BEV') return 0
+      if (vehicleType === 'PHEV') return vehiclePrice * 0.02
       return vehiclePrice * 0.03
 
     case 'NT':
-      // NT: flat 3%, no EV exemption
-      return vehiclePrice * 0.03
+      // 3% + $18 transfer fee. BEV ≤$50k: up to $1,500 concession (Jul 2022–Jun 2027).
+      const duty = vehiclePrice * 0.03 + 18
+      if (vehicleType === 'BEV' && vehiclePrice <= 50_000) return Math.max(0, duty - 1_500)
+      return duty
   }
 }

@@ -138,6 +138,46 @@ export function ResultsPanel({ result }: ResultsPanelProps) {
         <ResultRow label="Monthly lease payment" value={fmt(result.monthlyLeasePayment)} />
       </SectionCard>
 
+      {/* Regular loan comparison */}
+      {result.showLoanComparison && (
+        <SectionCard title="vs. Regular Car Loan">
+          <p className="text-xs text-gray-500 mb-3">
+            Comparing your novated lease against a standard car loan at {(result.loanComparisonRate * 100).toFixed(2)}% p.a.
+            Running costs are the same in both scenarios; no management fee applies to the loan.
+          </p>
+          <ResultRow
+            label={`Regular loan repayment (${periodLabel})`}
+            value={perPeriod(result.comparisonMonthlyLoanPayment * 12)}
+            hint="Loan repayment only — paid from after-tax income"
+          />
+          <ResultRow
+            label={`Running costs (${periodLabel})`}
+            value={perPeriod(result.annualRunningCosts)}
+            hint="Same running costs as your novated lease, paid from after-tax income"
+          />
+          <ResultRow
+            label={`Regular loan total (${periodLabel})`}
+            value={perPeriod(result.comparisonAnnualTotal)}
+            highlight
+          />
+          <div className="border-t border-gray-100 mt-2 pt-2">
+            <ResultRow
+              label={`Novated lease out-of-pocket (${periodLabel})`}
+              value={perPeriod(result.netAnnualCost)}
+            />
+            <ResultRow
+              label={`${result.annualSavingVsLoan >= 0 ? 'Saving' : 'Extra cost'} with novated lease (${periodLabel})`}
+              value={perPeriod(Math.abs(result.annualSavingVsLoan))}
+              positive={result.annualSavingVsLoan >= 0}
+              negative={result.annualSavingVsLoan < 0}
+              hint={result.annualSavingVsLoan >= 0
+                ? 'You save this amount by choosing a novated lease over a regular car loan'
+                : 'The novated lease costs more than a regular car loan in this scenario'}
+            />
+          </div>
+        </SectionCard>
+      )}
+
       {/* LCT / Stamp Duty breakdown */}
       {(result.lctApplied > 0 || result.stampDutyApplied > 0) && (
         <SectionCard title="Estimated costs included in drive-away price">
@@ -160,6 +200,9 @@ export function ResultsPanel({ result }: ResultsPanelProps) {
           )}
           <p className="text-xs text-gray-400 mt-2">
             * Stamp duty rates are approximate and subject to change.
+          </p>
+          <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-2">
+            ⚠ Stamp duty is calculated on your drive-away price, which already includes stamp duty itself plus other fees such as CTP insurance, registration, and plate fees. This means the estimate above will be slightly higher than the actual amount — for an accurate figure, use the vehicle's pre-registration price or check with your dealer.
           </p>
         </SectionCard>
       )}
