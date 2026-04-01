@@ -1,8 +1,6 @@
 # PDF Download Feature — Implementation Plan
 
-## Status: Ready to implement
-> Blocked during initial attempt by corporate Artifactory missing `electron-to-chromium@1.5.330`.
-> Fix the npm registry / Artifactory access, then follow the steps below.
+## Status: Core implementation complete — Playwright visual tests remaining
 
 ---
 
@@ -36,200 +34,115 @@ No WASM, no server, no build-time processing. Both libraries are pure browser JS
 | Analyser | `src/components/LeaseAnalyser/AnalyserResults.tsx` | Summary banner, Interest Rate Analysis, Payment Breakdown, Fees, Lease Structure, disclaimer |
 | Termination | `src/components/EarlyTermination/TerminationResults.tsx` | Summary banner, Finance Payout, Vehicle Equity, FBT Exposure, ECM note, Summary, disclaimer |
 
-A small branded header (app title + tab name + generation date) is added above the captured content.
+---
+
+## Files Created / Modified
+
+| File | Action | Notes |
+|---|---|---|
+| `src/lib/pdf/downloadPdf.ts` | **New** — core PDF generation utility | See design notes below |
+| `src/lib/pdf/downloadPdf.test.ts` | **New** — Vitest unit tests | jsdom environment, canvas stubbed |
+| `src/components/ui/DownloadPdfButton.tsx` | **New** — reusable button with loading state | Hidden during capture via `data-pdf-hide` |
+| `src/components/ui/SectionCard.tsx` | Modified — added `data-pdf-section` | Enables smart page breaking |
+| `src/components/Calculator/ResultsPanel.tsx` | Modified | Added `id="pdf-calculator-results"`, `<DownloadPdfButton>` |
+| `src/components/LeaseAnalyser/AnalyserResults.tsx` | Modified | Added `id="pdf-analyser-results"`, `<DownloadPdfButton>` |
+| `src/components/EarlyTermination/TerminationResults.tsx` | Modified | Added `id="pdf-termination-results"`, `<DownloadPdfButton>` |
 
 ---
 
-## Step-by-Step Implementation
+## How `downloadPdf` Works
 
-### Step 1 — Install dependencies
+### Overview
 
-```bash
-npm install html2canvas jspdf
+```
+element (DOM) ──► html2canvas ──► canvas
+                                    │
+                            slice at section boundaries
+                                    │
+                              jsPDF page(s)
+                                    │
+                                 .save()
 ```
 
-### Step 2 — Create `src/lib/pdf/downloadPdf.ts`
+### Step 1 — Collect section break positions
 
-New file. Single async utility:
+Before html2canvas runs, `getSectionBreaksPx()` queries all `[data-pdf-section]` elements inside the container and records their `y` position in canvas pixels (CSS px × scale 2). Every `SectionCard` has this attribute.
 
-```ts
-import html2canvas from 'html2canvas'
-import { jsPDF } from 'jspdf'
+This gives a list of "safe" break points — the whitespace gaps between cards.
 
-export async function downloadPdf(elementId: string, filename: string): Promise<void> {
-  const element = document.getElementById(elementId)
-  if (!element) throw new Error(`Element #${elementId} not found`)
+### Step 2 — Capture the canvas
 
-  // Hide any elements marked data-pdf-hide before capture
-  const hidden = element.querySelectorAll<HTMLElement>('[data-pdf-hide]')
-  hidden.forEach(el => { el.style.visibility = 'hidden' })
+`html2canvas(element, { scale: 2 })` renders the full results panel into an off-screen canvas at 2× resolution.
 
-  try {
-    const canvas = await html2canvas(element, { scale: 2, useCORS: true, logging: false })
-    const imgData = canvas.toDataURL('image/png')
+`data-pdf-hide` elements (the Download button itself) have `visibility: hidden` applied before capture and are restored in a `finally` block.
 
-    const pageWidthMm = 210   // A4
-    const marginMm = 10
-    const contentWidthMm = pageWidthMm - marginMm * 2
-    const contentHeightMm = (canvas.height / canvas.width) * contentWidthMm
+### Step 3 — Paginate with smart breaks
 
-    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
-    const pageHeightMm = pdf.internal.pageSize.getHeight() - marginMm * 2
+`findBreakPoint()` is called for each page:
 
-    // Paginate if content is taller than one A4 page
-    let yOffset = 0
-    while (yOffset < contentHeightMm) {
-      if (yOffset > 0) pdf.addPage()
-      pdf.addImage(imgData, 'PNG', marginMm, marginMm - yOffset, contentWidthMm, contentHeightMm)
-      yOffset += pageHeightMm
-    }
+1. Compute the **ideal break** = current top + one page's worth of pixels.
+2. Look for the **last section boundary** that fits within that page height.
+3. If one exists → break there (always lands in the gap between cards, never mid-row).
+4. If no boundary fits (a single section is taller than a page) → snap to the **next** section boundary after the ideal, extending this page slightly rather than cutting inside a card.
+5. If no further boundaries exist → break at the ideal position (last resort).
 
-    pdf.save(filename)
-  } finally {
-    hidden.forEach(el => { el.style.visibility = '' })
-  }
-}
-```
+### Step 4 — Slice and place
 
-### Step 3 — Create `src/components/ui/DownloadPdfButton.tsx`
+For each page, a new `<canvas>` is created of exactly the slice height, populated with `drawImage(fullCanvas, 0, -yPx)`. The slice is encoded as PNG and placed at `(marginMm, marginMm)` on the PDF page.
 
-New reusable button component:
+Margins are 10 mm on all sides. Each slice occupies only its unique pixels — no content is shared between pages.
 
-```tsx
-import { useState } from 'react'
-import { downloadPdf } from '../../lib/pdf/downloadPdf'
+### Why not the original fixed-offset approach?
 
-interface Props {
-  elementId: string
-  filename: string
-  label?: string
-}
-
-export function DownloadPdfButton({ elementId, filename, label = 'Download PDF' }: Props) {
-  const [isGenerating, setIsGenerating] = useState(false)
-
-  async function handleClick() {
-    setIsGenerating(true)
-    try {
-      await downloadPdf(elementId, filename)
-    } finally {
-      setIsGenerating(false)
-    }
-  }
-
-  return (
-    <button
-      onClick={handleClick}
-      disabled={isGenerating}
-      data-pdf-hide                // hidden during PDF capture
-      className="w-full bg-blue-700 hover:bg-blue-800 disabled:opacity-60 text-white font-semibold rounded-xl py-3 text-sm transition-colors"
-    >
-      {isGenerating ? 'Generating PDF…' : `⬇ ${label}`}
-    </button>
-  )
-}
-```
-
-### Step 4 — Update the three results components
-
-In each file: add an `id` to the root div, add `data-pdf-hide` to the button so it is hidden during capture, and place `<DownloadPdfButton>` at the bottom.
-
-**`src/components/Calculator/ResultsPanel.tsx`**
-- Root div: `<div id="pdf-calculator-results" ...>`
-- Add at the bottom (before closing div):
-  ```tsx
-  <DownloadPdfButton elementId="pdf-calculator-results" filename="novated-lease-calculator.pdf" />
-  ```
-
-**`src/components/LeaseAnalyser/AnalyserResults.tsx`**
-- Root div: `<div id="pdf-analyser-results" ...>`
-- Add at the bottom:
-  ```tsx
-  <DownloadPdfButton elementId="pdf-analyser-results" filename="lease-analyser.pdf" />
-  ```
-
-**`src/components/EarlyTermination/TerminationResults.tsx`**
-- Root div: `<div id="pdf-termination-results" ...>`
-- Add at the bottom:
-  ```tsx
-  <DownloadPdfButton elementId="pdf-termination-results" filename="early-termination.pdf" />
-  ```
+The plan originally described placing the full canvas image at `y = marginMm - yOffset` on each page (shifting it up). This caused a `marginMm` (10 mm) overlap: the top margin of each subsequent page rendered the same pixels as the bottom of the previous page. Switching to canvas slicing eliminated the overlap. Smart section-boundary breaks then eliminated mid-row cuts.
 
 ---
 
-## Files to Create / Modify
+## `DownloadPdfButton` Component
 
-| File | Action |
-|---|---|
-| `package.json` | `npm install html2canvas jspdf` adds entries here |
-| `src/lib/pdf/downloadPdf.ts` | **New** — core PDF generation utility |
-| `src/components/ui/DownloadPdfButton.tsx` | **New** — reusable button with loading state |
-| `src/components/Calculator/ResultsPanel.tsx` | Add `id`, import + place button |
-| `src/components/LeaseAnalyser/AnalyserResults.tsx` | Add `id`, import + place button |
-| `src/components/EarlyTermination/TerminationResults.tsx` | Add `id`, import + place button |
+```
+<DownloadPdfButton
+  elementId="pdf-calculator-results"   ← the root div's id
+  filename="novated-lease-calculator.pdf"
+  label="Download PDF"                  ← optional, default shown
+/>
+```
+
+- Shows a spinner ("Generating PDF…") while `html2canvas` is running.
+- Carries `data-pdf-hide` so it is invisible in the captured canvas.
+- Disabled while generating (prevents double-clicks).
 
 ---
 
-## Testing
+## Remaining: Playwright Visual Regression Tests
 
-### Verification checklist
-1. `npm run dev` → fill in values in each tab → click "Download PDF"
-2. PDF opens with visual output matching the on-screen results panel
-3. Button does not appear in the PDF
-4. Long panels (Calculator with loan comparison enabled) paginate correctly across A4 pages
-5. `npm run build` — no TypeScript errors
-6. `npm test` — all existing Vitest tests continue to pass
+The unit tests (`src/lib/pdf/downloadPdf.test.ts`) cover the pagination logic in isolation. Visual golden-file tests are not yet set up.
 
-### Unit tests — `src/lib/pdf/downloadPdf.test.ts`
-
-Mock `html2canvas` and `jsPDF` in Vitest to avoid browser dependencies:
-
-```ts
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-
-const mockSave = vi.fn()
-const mockAddImage = vi.fn()
-const mockAddPage = vi.fn()
-const mockCanvas = {
-  toDataURL: vi.fn(() => 'data:image/png;base64,abc'),
-  width: 800,
-  height: 2000,
-}
-
-vi.mock('html2canvas', () => ({ default: vi.fn().mockResolvedValue(mockCanvas) }))
-vi.mock('jspdf', () => ({
-  jsPDF: vi.fn(() => ({
-    addImage: mockAddImage,
-    addPage: mockAddPage,
-    save: mockSave,
-    internal: { pageSize: { getHeight: () => 297 } },
-  })),
-}))
-```
-
-Tests to write:
-- Calls `html2canvas` with `{ scale: 2 }` on the correct element
-- Calls `pdf.save()` with the supplied filename
-- Elements with `data-pdf-hide` have `visibility: hidden` during capture and are restored after
-- Throws when `elementId` is not found in the DOM
-- Calls `pdf.addPage()` when content height exceeds one A4 page
-
-### Visual golden file tests — Playwright (separate setup)
-
-Since the PDF is a screenshot of the results panel, visual regression tests on the panel itself prove the PDF content.
+### Setup
 
 ```bash
 npm install -D @playwright/test
 npx playwright install chromium
 ```
 
-New files:
+### New files needed
+
 - `playwright.config.ts` — points at `http://localhost:5173`, sets snapshot directory
 - `tests/calculator.spec.ts` — fills form with fixed values, screenshots `#pdf-calculator-results`
 - `tests/analyser.spec.ts` — same for analyser
 - `tests/termination.spec.ts` — same for termination
 
-Workflow:
+### Workflow
+
 - First run: `npx playwright test --update-snapshots` → stores golden PNGs in `tests/screenshots/`
 - Commit the golden PNGs to git
 - Subsequent runs diff live output against golden — failures require explicit `--update-snapshots` to approve
+
+### Verification checklist (manual)
+
+1. `npm run dev` → fill in values in each tab → click "Download PDF"
+2. PDF opens with visual output matching the on-screen results panel
+3. Button does not appear in the PDF
+4. Long panels (Calculator with loan comparison enabled) paginate between section cards, not mid-row
+5. `npm run build` — no TypeScript errors
+6. `npm test` — all existing Vitest tests continue to pass
