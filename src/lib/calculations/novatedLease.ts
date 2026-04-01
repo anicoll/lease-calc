@@ -11,6 +11,9 @@ export function calculateNovatedLease(inputs: LeaseInputs): LeaseResult {
     vehicleType,
     phevDeliveredBeforeApril2025,
     interestRate,
+    showLoanComparison,
+    loanComparisonRate,
+    loanComparisonResidual,
     termYears,
     customResidualPercent,
     annualManagementFee,
@@ -57,9 +60,12 @@ export function calculateNovatedLease(inputs: LeaseInputs): LeaseResult {
     annualPreTaxDeduction = totalPreTaxBudget
     annualPostTaxDeduction = 0
   } else {
-    // ECM: post-tax contribution = base value × 20% to eliminate FBT
-    annualPostTaxDeduction = ecmAnnualContribution(vehicleCost)
-    annualPreTaxDeduction = totalPreTaxBudget
+    // ECM funds part of the total package cost — it is not additional to it.
+    // The employee's post-tax ECM contribution (base value × 20%) replaces pre-tax
+    // salary sacrifice up to the total package cost; pre-tax covers the remainder.
+    // pre-tax + post-tax = totalPreTaxBudget (total cost of the package).
+    annualPostTaxDeduction = Math.min(ecmAnnualContribution(vehicleCost), totalPreTaxBudget)
+    annualPreTaxDeduction = Math.max(0, totalPreTaxBudget - annualPostTaxDeduction)
   }
 
   // 9. Tax saving
@@ -72,6 +78,13 @@ export function calculateNovatedLease(inputs: LeaseInputs): LeaseResult {
   //     (pre-tax + post-tax contributions, minus the tax saving from salary sacrifice)
   const netAnnualCost = annualPreTaxDeduction + annualPostTaxDeduction - annualTaxSaving
   const effectiveMonthlyOutOfPocket = netAnnualCost / 12
+
+  // 11. Regular loan comparison (same vehicle cost, same term, $0 residual — standard P&I loan, no tax benefit, no management fee)
+  const loanMonthlyRate = loanComparisonRate / 12
+  const comparisonMonthlyLoanPayment = pmt(loanMonthlyRate, termMonths, vehicleCost, loanComparisonResidual)
+  const comparisonMonthlyTotal = comparisonMonthlyLoanPayment + annualRunningCosts / 12
+  const comparisonAnnualTotal = comparisonMonthlyTotal * 12
+  const annualSavingVsLoan = comparisonAnnualTotal - netAnnualCost
 
   return {
     fbtExempt,
@@ -94,6 +107,12 @@ export function calculateNovatedLease(inputs: LeaseInputs): LeaseResult {
     netAnnualCost,
     effectiveMonthlyOutOfPocket,
     newTaxableIncome,
+    showLoanComparison,
+    loanComparisonRate,
+    comparisonMonthlyLoanPayment,
+    comparisonMonthlyTotal,
+    comparisonAnnualTotal,
+    annualSavingVsLoan,
   }
 }
 
