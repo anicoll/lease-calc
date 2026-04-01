@@ -37,8 +37,8 @@ export function ResultsPanel({ result }: ResultsPanelProps) {
         ].join(' ')}
       >
         {result.fbtExempt
-          ? '✓ This vehicle qualifies for the FBT exemption — no Fringe Benefits Tax applies.'
-          : '⚠ FBT applies to this vehicle. A post-tax ECM contribution is required to eliminate FBT.'}
+          ? '✓ This vehicle qualifies for the FBT (Fringe Benefits Tax) exemption — no FBT applies.'
+          : '⚠ FBT (Fringe Benefits Tax) applies to this vehicle. A post-tax ECM (Employee Contribution Method) contribution is required to eliminate FBT liability.'}
       </div>
 
       {/* Payment period summary */}
@@ -103,12 +103,6 @@ export function ResultsPanel({ result }: ResultsPanelProps) {
           />
         )}
         <ResultRow
-          label="Annual income tax saving"
-          value={fmt(result.annualTaxSaving)}
-          positive
-          hint="Tax you save by reducing your taxable income through salary sacrifice"
-        />
-        <ResultRow
           label="Net annual cost"
           value={fmt(result.netAnnualCost)}
           highlight
@@ -129,7 +123,7 @@ export function ResultsPanel({ result }: ResultsPanelProps) {
 
       {/* Lease Details */}
       <SectionCard title="Lease Details">
-        <ResultRow label="Drive-away price (financed)" value={fmt(result.effectiveBaseValue)} />
+        <ResultRow label="Vehicle price (used for calculations)" value={fmt(result.effectiveBaseValue)} hint="Drive-away price as entered — LCT and stamp duty are shown separately below as estimates" />
         <ResultRow
           label="Residual value"
           value={`${fmt(result.residualValue)} (${fmtPct(result.residualPercent)})`}

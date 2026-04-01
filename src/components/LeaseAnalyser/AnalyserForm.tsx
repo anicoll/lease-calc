@@ -18,7 +18,6 @@ export function AnalyserForm({ onAnalyse }: AnalyserFormProps) {
   const [termRemainingMonths, setTermRemainingMonths] = useState('60')
   const [payPeriod, setPayPeriod] = useState<PayPeriod>('fortnightly')
   const [preTax, setPreTax] = useState('830')
-  const [postTax, setPostTax] = useState('0')
   const [managementFee, setManagementFee] = useState('100')
   const [runningCosts, setRunningCosts] = useState('500')
   const [benchmarkRate, setBenchmarkRate] = useState('7.5')
@@ -33,7 +32,6 @@ export function AnalyserForm({ onAnalyse }: AnalyserFormProps) {
       vehicleBaseValue: parseFloat(vehicleBaseValue) || 0,
       termRemainingMonths: parseInt(termRemainingMonths) || 12,
       monthlyPreTax: toMonthly(parseFloat(preTax) || 0, payPeriod),
-      monthlyPostTax: toMonthly(parseFloat(postTax) || 0, payPeriod),
       monthlyManagementFee: parseFloat(managementFee) || 0,
       monthlyRunningCosts: parseFloat(runningCosts) || 0,
       benchmarkRate: parseFloat(benchmarkRate) / 100 || 0,
@@ -102,16 +100,6 @@ export function AnalyserForm({ onAnalyse }: AnalyserFormProps) {
             </div>
           </InputField>
 
-          <InputField
-            label={`Post-tax deduction (${periodLabel})`}
-            hint="ECM contribution per pay period (0 if FBT-exempt vehicle) — from your payslip"
-          >
-            <div className="relative">
-              <span className="absolute left-3 top-2 text-gray-400 text-sm">$</span>
-              <input type="number" className={inputCls + ' pl-6'} value={postTax}
-                onChange={e => setPostTax(e.target.value)} min="0" />
-            </div>
-          </InputField>
         </div>
       </SectionCard>
 
