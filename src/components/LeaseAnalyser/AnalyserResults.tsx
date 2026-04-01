@@ -1,4 +1,5 @@
 import type { AnalyserResult } from '../../types'
+import { DownloadPdfButton } from '../ui/DownloadPdfButton'
 import { ResultRow } from '../ui/ResultRow'
 import { SectionCard } from '../ui/SectionCard'
 
@@ -21,7 +22,7 @@ export function AnalyserResults({ result }: AnalyserResultsProps) {
     : 'Unable to calculate'
 
   return (
-    <div className="flex flex-col gap-4">
+    <div id="pdf-analyser-results" className="flex flex-col gap-4">
       {/* Summary banner */}
       <div className={[
         'rounded-xl px-4 py-3 text-sm font-medium',
@@ -97,6 +98,7 @@ export function AnalyserResults({ result }: AnalyserResultsProps) {
         This analysis is indicative only. Differences may reflect legitimate variations in lease structure,
         insurance inclusions, or other factors. Consult your provider or a financial adviser for detailed advice.
       </p>
+      <DownloadPdfButton elementId="pdf-analyser-results" filename="lease-analyser.pdf" />
     </div>
   )
 }
