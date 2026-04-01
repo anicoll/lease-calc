@@ -1,7 +1,13 @@
-.PHONY: test test-ci
+.PHONY: test test-e2e update-snapshots test-ci
 
 test:
 	npm test
+
+test-e2e:
+	npx playwright test
+
+update-snapshots:
+	npx playwright test --update-snapshots
 
 test-ci:
 	act pull_request \
