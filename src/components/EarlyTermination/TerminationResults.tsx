@@ -1,4 +1,5 @@
 import type { EarlyTerminationResult } from '../../types'
+import { DownloadPdfButton } from '../ui/DownloadPdfButton'
 import { ResultRow } from '../ui/ResultRow'
 import { SectionCard } from '../ui/SectionCard'
 
@@ -29,7 +30,7 @@ export function TerminationResults({ result }: TerminationResultsProps) {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div id="pdf-termination-results" className="flex flex-col gap-4">
       {/* Summary banner */}
       <div className={['rounded-xl px-4 py-3 text-sm font-medium', bannerClass].join(' ')}>
         {bannerMessage}
@@ -178,6 +179,7 @@ export function TerminationResults({ result }: TerminationResultsProps) {
         Finance payout figures should be confirmed with your novated lease provider.
         FBT obligations are your employer's responsibility — consult your payroll team or a tax adviser.
       </p>
+      <DownloadPdfButton elementId="pdf-termination-results" filename="early-termination.pdf" />
     </div>
   )
 }
