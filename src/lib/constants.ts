@@ -5,6 +5,19 @@ export const FBT_RATE = 0.47
 export const FBT_TYPE2_GROSS_UP = 2.0802
 export const FBT_STATUTORY_FRACTION = 0.20
 
+// ── FBT Phase-Out Dates (announced May 2026 Federal Budget) ─────────────────
+// Leases entered into before 1 April 2027 are grandfathered — they retain full
+// Phase 1 exemption for the entire lease term regardless of when it ends.
+export const FBT_GRANDFATHERING_CUTOFF = new Date('2027-04-01')
+// From 1 Apr 2027: BEVs over $75,000 receive only 25% exemption (75% FBT payable).
+export const FBT_PHASE2_START = new Date('2027-04-01')
+// From 1 Apr 2029: all BEVs under the LCT threshold receive only 25% exemption.
+export const FBT_PHASE3_START = new Date('2029-04-01')
+// In Phase 2, BEVs at or below this price retain full exemption.
+export const FBT_PHASE2_FULL_EXEMPTION_CAP = 75_000
+// Fraction of FBT that remains payable under partial exemption (Phase 2/3).
+export const FBT_PARTIAL_TAXABLE_FRACTION = 0.75
+
 // ── Luxury Car Tax (2024-25) ────────────────────────────────────────────────
 export const LCT_THRESHOLD_FUEL_EFFICIENT = 91_387   // BEV, PHEV, efficient hybrids
 export const LCT_THRESHOLD_GENERAL = 76_950           // all other vehicles

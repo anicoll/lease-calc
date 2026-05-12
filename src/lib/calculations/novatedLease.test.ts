@@ -10,8 +10,10 @@ import type { AnalyserInputs, MultiTermLeaseInputs } from '../../types'
 const baseInputs: MultiTermLeaseInputs = {
   grossSalary: 120_000,
   vehicleCost: 60_000,
-  vehicleType: 'BEV',         // FBT exempt (under $91,387)
+  vehicleType: 'BEV',         // FBT exempt (under $91,387, Phase 1)
   phevDeliveredBeforeApril2025: false,
+  leaseStartDate: new Date('2026-06-01'), // Phase 1
+  grandfatheredLease: false,
   interestRate: 0.07,
   showLoanComparison: false,
   loanComparisonRate: 0.08,
@@ -31,9 +33,9 @@ const baseInputs: MultiTermLeaseInputs = {
 // ── calculateNovatedLease — FBT-exempt BEV ───────────────────────────────────
 
 describe('calculateNovatedLease — FBT-exempt BEV', () => {
-  it('marks the vehicle as FBT exempt', () => {
+  it('marks the vehicle as fully FBT exempt', () => {
     const result = calculateNovatedLease(baseInputs, 5)
-    expect(result.fbtExempt).toBe(true)
+    expect(result.fbtExemptionStatus).toBe('full')
   })
 
   it('returns zero LCT for a BEV under the fuel-efficient threshold', () => {
@@ -140,7 +142,7 @@ describe('calculateNovatedLease — ICE vehicle with ECM', () => {
 
   it('marks the vehicle as NOT FBT exempt', () => {
     const result = calculateNovatedLease(iceInputs, 5)
-    expect(result.fbtExempt).toBe(false)
+    expect(result.fbtExemptionStatus).toBe('none')
   })
 
   it('splits the budget into pre-tax and post-tax (ECM) deductions', () => {
@@ -151,7 +153,7 @@ describe('calculateNovatedLease — ICE vehicle with ECM', () => {
 
   it('post-tax ECM deduction equals vehicleCost × 20% (statutory fraction)', () => {
     const result = calculateNovatedLease(iceInputs, 5)
-    const expectedEcm = ecmAnnualContribution(baseInputs.vehicleCost)
+    const expectedEcm = ecmAnnualContribution(baseInputs.vehicleCost, 'none')
     expect(result.annualPostTaxDeduction).toBeCloseTo(expectedEcm, 2)
   })
 
@@ -191,7 +193,7 @@ describe('calculateNovatedLease — LCT on expensive vehicle', () => {
   it('applies LCT for a BEV above the fuel-efficient threshold', () => {
     const result = calculateNovatedLease({ ...baseInputs, vehicleType: 'BEV', vehicleCost: 95_000 }, 5)
     expect(result.lctApplied).toBeGreaterThan(0)
-    expect(result.fbtExempt).toBe(false)
+    expect(result.fbtExemptionStatus).toBe('none')
   })
 })
 
@@ -304,6 +306,62 @@ describe('calculateAllLeaseTerms', () => {
     for (let i = 0; i < results.length - 1; i++) {
       expect(results[i]!.monthlyLeasePayment).toBeGreaterThan(results[i + 1]!.monthlyLeasePayment)
     }
+  })
+})
+
+// ── calculateNovatedLease — Phase 2 partial exemption ─────────────────────────
+
+describe('calculateNovatedLease — Phase 2 BEV with partial exemption', () => {
+  // BEV priced above $75k in Phase 2 (from 1 Apr 2027): 25% exempt, 75% FBT payable
+  const phase2Inputs: MultiTermLeaseInputs = {
+    ...baseInputs,
+    vehicleCost: 80_000,
+    leaseStartDate: new Date('2027-06-01'), // Phase 2
+  }
+
+  it('returns partial exemption status for a $80k BEV in Phase 2', () => {
+    const result = calculateNovatedLease(phase2Inputs, 5)
+    expect(result.fbtExemptionStatus).toBe('partial')
+  })
+
+  it('has a non-zero post-tax ECM deduction (reduced vs fully non-exempt)', () => {
+    const result = calculateNovatedLease(phase2Inputs, 5)
+    expect(result.annualPostTaxDeduction).toBeGreaterThan(0)
+    // Partial ECM = 75% of full ECM
+    const fullEcm = ecmAnnualContribution(phase2Inputs.vehicleCost, 'none')
+    const partialEcm = ecmAnnualContribution(phase2Inputs.vehicleCost, 'partial')
+    expect(result.annualPostTaxDeduction).toBeCloseTo(partialEcm, 2)
+    expect(result.annualPostTaxDeduction).toBeLessThan(fullEcm)
+  })
+
+  it('partial exemption BEV has higher net cost than fully exempt BEV but lower than ICE', () => {
+    const fullyExempt = calculateNovatedLease({ ...phase2Inputs, vehicleCost: 60_000 }, 5)
+    const partialExempt = calculateNovatedLease(phase2Inputs, 5)
+    const nonExempt = calculateNovatedLease({ ...phase2Inputs, vehicleType: 'ICE' }, 5)
+    expect(partialExempt.netAnnualCost).toBeGreaterThan(fullyExempt.netAnnualCost)
+    expect(partialExempt.netAnnualCost).toBeLessThan(nonExempt.netAnnualCost)
+  })
+
+  it('has no phase warning for a Phase 1 lease (all pre-Apr 2027 leases are grandfathered)', () => {
+    const phase1Lease = calculateNovatedLease({
+      ...baseInputs,
+      leaseStartDate: new Date('2026-06-01'),
+    }, 5)
+    expect(phase1Lease.fbtPhaseWarning).toBeNull()
+  })
+
+  it('includes a phase-crossing warning for a Phase 2 lease that spans into Phase 3', () => {
+    const phase2LongLease = calculateNovatedLease({
+      ...baseInputs,
+      leaseStartDate: new Date('2027-06-01'), // Phase 2
+    }, 3) // 3-year lease ending Jun 2030 — crosses Phase 3 (Apr 2029)
+    expect(phase2LongLease.fbtPhaseWarning).not.toBeNull()
+  })
+
+  it('has no phase warning for a grandfathered lease', () => {
+    const result = calculateNovatedLease({ ...phase2Inputs, grandfatheredLease: true }, 5)
+    expect(result.fbtPhaseWarning).toBeNull()
+    expect(result.fbtExemptionStatus).toBe('full')
   })
 })
 

@@ -1,11 +1,12 @@
 import { pmt } from './lease'
-import { isFbtExempt } from './fbt'
+import { getFbtExemptionStatus } from './fbt'
 import {
+  FBT_PARTIAL_TAXABLE_FRACTION,
   FBT_RATE,
   FBT_STATUTORY_FRACTION,
   FBT_TYPE2_GROSS_UP,
 } from '../constants'
-import type { EarlyTerminationInputs, EarlyTerminationResult } from '../../types'
+import type { EarlyTerminationInputs, EarlyTerminationResult, FbtExemptionStatus } from '../../types'
 
 /**
  * Present value of remaining lease payments plus residual.
@@ -51,11 +52,13 @@ export function daysInFbtYear(terminationDate: Date, monthsElapsed: number): num
 
 /**
  * Prorated FBT for a partial FBT year using the statutory formula method.
- * Annual FBT = baseValue × 0.20 × 2.0802 × 0.47
+ * For partial exemption, 75% of the full FBT is payable.
  * Prorated FBT = annual FBT × (daysUsed / 365)
  */
-function partialYearFbt(baseValue: number, days: number): number {
-  const annualFbt = baseValue * FBT_STATUTORY_FRACTION * FBT_TYPE2_GROSS_UP * FBT_RATE
+function partialYearFbt(baseValue: number, days: number, status: FbtExemptionStatus): number {
+  if (status === 'full') return 0
+  const exposedFraction = status === 'partial' ? FBT_PARTIAL_TAXABLE_FRACTION : 1
+  const annualFbt = baseValue * FBT_STATUTORY_FRACTION * exposedFraction * FBT_TYPE2_GROSS_UP * FBT_RATE
   return annualFbt * (days / 365)
 }
 
@@ -74,6 +77,7 @@ export function calculateEarlyTermination(
     currentMarketValue,
     vehicleType,
     phevDeliveredBeforeApril2025,
+    grandfatheredLease,
     terminationDate,
   } = inputs
 
@@ -97,10 +101,12 @@ export function calculateEarlyTermination(
     isUnderwater = vehicleEquity < 0
   }
 
-  // FBT exposure
-  const exempt = isFbtExempt(vehicleType, vehicleBaseValue, phevDeliveredBeforeApril2025)
+  // FBT exposure — derive lease start date from termination date minus elapsed months
+  const leaseStartDate = new Date(terminationDate)
+  leaseStartDate.setMonth(leaseStartDate.getMonth() - monthsElapsed)
+  const fbtExemptionStatus = getFbtExemptionStatus(vehicleType, vehicleBaseValue, leaseStartDate, phevDeliveredBeforeApril2025, grandfatheredLease)
   const days = daysInFbtYear(terminationDate, monthsElapsed)
-  const fbtAmount = exempt ? 0 : partialYearFbt(vehicleBaseValue, days)
+  const fbtAmount = partialYearFbt(vehicleBaseValue, days, fbtExemptionStatus)
 
   // Total exposure: payout + management fees + termination fee + FBT - positive equity offset
   let totalFinancialExposure: number | null = null
@@ -117,7 +123,7 @@ export function calculateEarlyTermination(
     terminationFee,
     vehicleEquity,
     isUnderwater,
-    fbtExempt: exempt,
+    fbtExemptionStatus,
     partialYearFbtPayable: fbtAmount,
     daysUsedInFbtYear: days,
     ecmAccountNote:

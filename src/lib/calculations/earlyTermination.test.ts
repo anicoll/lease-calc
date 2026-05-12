@@ -15,6 +15,7 @@ const base: EarlyTerminationInputs = {
   currentMarketValue: null,
   vehicleType: 'ICE',
   phevDeliveredBeforeApril2025: false,
+  grandfatheredLease: false,
   terminationDate: new Date('2025-10-15'), // mid FBT year (Apr 2025 – Mar 2026)
 }
 
@@ -61,13 +62,13 @@ describe('daysInFbtYear', () => {
 // ── FBT exemption ─────────────────────────────────────────────────────────────
 
 describe('FBT exemption', () => {
-  it('BEV under LCT threshold is always exempt', () => {
+  it('BEV under LCT threshold is fully exempt (Phase 1)', () => {
     const result = calculateEarlyTermination({
       ...base,
       vehicleType: 'BEV',
-      vehicleBaseValue: 65_000, // under $91,387 threshold
+      vehicleBaseValue: 65_000, // under $91,387 threshold, terminationDate in Phase 1
     })
-    expect(result.fbtExempt).toBe(true)
+    expect(result.fbtExemptionStatus).toBe('full')
     expect(result.partialYearFbtPayable).toBe(0)
   })
 
@@ -77,7 +78,7 @@ describe('FBT exemption', () => {
       vehicleType: 'BEV',
       vehicleBaseValue: 95_000, // over $91,387 threshold
     })
-    expect(result.fbtExempt).toBe(false)
+    expect(result.fbtExemptionStatus).toBe('none')
     expect(result.partialYearFbtPayable).toBeGreaterThan(0)
   })
 
@@ -88,7 +89,7 @@ describe('FBT exemption', () => {
       phevDeliveredBeforeApril2025: true,
       vehicleBaseValue: 65_000,
     })
-    expect(result.fbtExempt).toBe(true)
+    expect(result.fbtExemptionStatus).toBe('full')
     expect(result.partialYearFbtPayable).toBe(0)
   })
 
@@ -99,14 +100,51 @@ describe('FBT exemption', () => {
       phevDeliveredBeforeApril2025: false,
       vehicleBaseValue: 65_000,
     })
-    expect(result.fbtExempt).toBe(false)
+    expect(result.fbtExemptionStatus).toBe('none')
     expect(result.partialYearFbtPayable).toBeGreaterThan(0)
   })
 
   it('ICE vehicle is never exempt', () => {
     const result = calculateEarlyTermination({ ...base, vehicleType: 'ICE' })
-    expect(result.fbtExempt).toBe(false)
+    expect(result.fbtExemptionStatus).toBe('none')
     expect(result.partialYearFbtPayable).toBeGreaterThan(0)
+  })
+
+  it('Phase 2 BEV over $75k has partial exemption and reduced partial-year FBT', () => {
+    // terminationDate Jun 2028 (Phase 2), monthsElapsed 12 → leaseStartDate Jun 2027 (Phase 2)
+    const phase2Termination = new Date('2028-06-01')
+    const result = calculateEarlyTermination({
+      ...base,
+      vehicleType: 'BEV',
+      vehicleBaseValue: 80_000, // over $75k Phase 2 cap but under LCT threshold
+      monthsElapsed: 12,        // leaseStart = Jun 2027 → Phase 2
+      terminationDate: phase2Termination,
+    })
+    expect(result.fbtExemptionStatus).toBe('partial')
+    expect(result.partialYearFbtPayable).toBeGreaterThan(0)
+    // Partial FBT is less than what a fully non-exempt vehicle would pay
+    const nonExemptResult = calculateEarlyTermination({
+      ...base,
+      vehicleType: 'ICE',
+      vehicleBaseValue: 80_000,
+      monthsElapsed: 12,
+      terminationDate: phase2Termination,
+    })
+    expect(result.partialYearFbtPayable).toBeLessThan(nonExemptResult.partialYearFbtPayable)
+  })
+
+  it('grandfathered Phase 2 BEV over $75k is still fully exempt', () => {
+    const phase2Termination = new Date('2028-06-01')
+    const result = calculateEarlyTermination({
+      ...base,
+      vehicleType: 'BEV',
+      vehicleBaseValue: 80_000,
+      monthsElapsed: 12,
+      grandfatheredLease: true,
+      terminationDate: phase2Termination,
+    })
+    expect(result.fbtExemptionStatus).toBe('full')
+    expect(result.partialYearFbtPayable).toBe(0)
   })
 })
 
@@ -119,7 +157,7 @@ describe('partial-year FBT calculation', () => {
       vehicleType: 'ICE',
       terminationDate: new Date('2026-04-01'),
     })
-    expect(result.fbtExempt).toBe(false)
+    expect(result.fbtExemptionStatus).toBe('none')
     expect(result.daysUsedInFbtYear).toBe(0)
     expect(result.partialYearFbtPayable).toBe(0)
   })
@@ -129,7 +167,7 @@ describe('partial-year FBT calculation', () => {
     // Annual FBT = 65000 × 0.20 × 2.0802 × 0.47 = 12,709.62
     // Prorated = 12,709.62 × (197/365) = 6,857.xx
     const result = calculateEarlyTermination({ ...base, vehicleType: 'ICE' })
-    expect(result.fbtExempt).toBe(false)
+    expect(result.fbtExemptionStatus).toBe('none')
     expect(result.daysUsedInFbtYear).toBe(197)
     expect(result.partialYearFbtPayable).toBeCloseTo(6_857, -1)
   })

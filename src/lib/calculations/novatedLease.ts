@@ -1,6 +1,6 @@
 import { calculateStampDuty } from '../constants'
 import type { AnalyserInputs, AnalyserResult, LeaseResult, MultiTermLeaseInputs } from '../../types'
-import { ecmAnnualContribution, isFbtExempt } from './fbt'
+import { ecmAnnualContribution, getFbtExemptionStatus, getFbtPhaseWarning } from './fbt'
 import { atoResidualPercent, impliedAnnualRate, lct, pmt, residualValue } from './lease'
 import { totalTax } from './tax'
 
@@ -10,6 +10,8 @@ export function calculateNovatedLease(inputs: MultiTermLeaseInputs, termYears: n
     vehicleCost,
     vehicleType,
     phevDeliveredBeforeApril2025,
+    leaseStartDate,
+    grandfatheredLease,
     interestRate,
     showLoanComparison,
     loanComparisonRate,
@@ -20,8 +22,9 @@ export function calculateNovatedLease(inputs: MultiTermLeaseInputs, termYears: n
     state,
   } = inputs
 
-  // 1. FBT exemption
-  const fbtExempt = isFbtExempt(vehicleType, vehicleCost, phevDeliveredBeforeApril2025)
+  // 1. FBT exemption status and any phase-crossing warning
+  const fbtExemptionStatus = getFbtExemptionStatus(vehicleType, vehicleCost, leaseStartDate, phevDeliveredBeforeApril2025, grandfatheredLease)
+  const fbtPhaseWarning = getFbtPhaseWarning(leaseStartDate, termYears, grandfatheredLease)
 
   // 2. LCT (federal, upfront cost shown separately)
   const lctApplied = lct(vehicleCost, vehicleType)
@@ -55,15 +58,15 @@ export function calculateNovatedLease(inputs: MultiTermLeaseInputs, termYears: n
   let annualPreTaxDeduction: number
   let annualPostTaxDeduction: number
 
-  if (fbtExempt) {
+  if (fbtExemptionStatus === 'full') {
     annualPreTaxDeduction = totalPreTaxBudget
     annualPostTaxDeduction = 0
   } else {
     // ECM funds part of the total package cost — it is not additional to it.
-    // The employee's post-tax ECM contribution (base value × 20%) replaces pre-tax
-    // salary sacrifice up to the total package cost; pre-tax covers the remainder.
-    // pre-tax + post-tax = totalPreTaxBudget (total cost of the package).
-    annualPostTaxDeduction = Math.min(ecmAnnualContribution(vehicleCost), totalPreTaxBudget)
+    // The employee's post-tax ECM contribution replaces pre-tax salary sacrifice up to
+    // the total package cost; pre-tax covers the remainder.
+    // For partial exemption, only 75% of the statutory taxable value needs to be covered.
+    annualPostTaxDeduction = Math.min(ecmAnnualContribution(vehicleCost, fbtExemptionStatus), totalPreTaxBudget)
     annualPreTaxDeduction = Math.max(0, totalPreTaxBudget - annualPostTaxDeduction)
   }
 
@@ -88,7 +91,8 @@ export function calculateNovatedLease(inputs: MultiTermLeaseInputs, termYears: n
   return {
     termYears,
     interestCost: (monthlyLeasePayment * termYears * 12) + residual - vehicleCost,
-    fbtExempt,
+    fbtExemptionStatus,
+    fbtPhaseWarning,
     lctApplied,
     stampDutyApplied,
     effectiveBaseValue: vehicleCost,

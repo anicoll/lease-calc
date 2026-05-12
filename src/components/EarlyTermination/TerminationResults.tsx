@@ -99,13 +99,15 @@ export function TerminationResults({ result }: TerminationResultsProps) {
       <SectionCard title="FBT Exposure">
         <ResultRow
           label="FBT status"
-          value={result.fbtExempt ? 'Exempt' : 'Not exempt'}
-          positive={result.fbtExempt}
-          hint={result.fbtExempt
-            ? 'Your vehicle qualifies for the FBT exemption — no FBT is payable.'
-            : 'Your vehicle does not qualify for the FBT exemption. FBT may be payable for the period the vehicle was used in this FBT year.'}
+          value={result.fbtExemptionStatus === 'full' ? 'Fully exempt' : result.fbtExemptionStatus === 'partial' ? 'Partial exemption (25%)' : 'Not exempt'}
+          positive={result.fbtExemptionStatus === 'full'}
+          hint={result.fbtExemptionStatus === 'full'
+            ? 'Your vehicle qualifies for the full FBT exemption — no FBT is payable.'
+            : result.fbtExemptionStatus === 'partial'
+              ? 'Your vehicle qualifies for a 25% FBT exemption. 75% of the standard FBT may be payable for the period the vehicle was used.'
+              : 'Your vehicle does not qualify for the FBT exemption. FBT may be payable for the period the vehicle was used in this FBT year.'}
         />
-        {!result.fbtExempt && (
+        {result.fbtExemptionStatus !== 'full' && (
           <>
             <ResultRow
               label="Days used in current FBT year"

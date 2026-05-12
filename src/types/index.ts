@@ -1,5 +1,8 @@
 export type VehicleType = 'BEV' | 'PHEV' | 'ICE'
 
+/** 'full' = 100% FBT exempt; 'partial' = 25% exempt (75% payable); 'none' = fully subject to FBT */
+export type FbtExemptionStatus = 'full' | 'partial' | 'none'
+
 export type AustralianState = 'NSW' | 'VIC' | 'QLD' | 'SA' | 'WA' | 'TAS' | 'ACT' | 'NT'
 
 export interface RunningCosts {
@@ -15,6 +18,8 @@ export interface LeaseInputs {
   vehicleCost: number
   vehicleType: VehicleType
   phevDeliveredBeforeApril2025: boolean
+  leaseStartDate: Date
+  grandfatheredLease: boolean
   interestRate: number
   showLoanComparison: boolean
   loanComparisonRate: number
@@ -30,7 +35,8 @@ export type MultiTermLeaseInputs = LeaseInputs
 export interface LeaseResult {
   termYears: number
   interestCost: number
-  fbtExempt: boolean
+  fbtExemptionStatus: FbtExemptionStatus
+  fbtPhaseWarning: string | null
   lctApplied: number
   stampDutyApplied: number
   effectiveBaseValue: number
@@ -92,6 +98,7 @@ export interface EarlyTerminationInputs {
   currentMarketValue: number | null   // null → skip equity calculation
   vehicleType: VehicleType
   phevDeliveredBeforeApril2025: boolean
+  grandfatheredLease: boolean
   terminationDate: Date
 }
 
@@ -103,7 +110,7 @@ export interface EarlyTerminationResult {
   terminationFee: number
   vehicleEquity: number | null
   isUnderwater: boolean | null
-  fbtExempt: boolean
+  fbtExemptionStatus: FbtExemptionStatus
   partialYearFbtPayable: number
   daysUsedInFbtYear: number
   ecmAccountNote: string

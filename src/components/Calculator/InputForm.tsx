@@ -14,6 +14,10 @@ export function InputForm({ onCalculate }: InputFormProps) {
   const [vehicleCost, setVehicleCost] = useState('65000')
   const [vehicleType, setVehicleType] = useState<VehicleType>('BEV')
   const [phevBefore, setPhevBefore] = useState(true)
+  const [leaseStartDate, setLeaseStartDate] = useState(
+    () => new Date().toISOString().split('T')[0],
+  )
+  const [grandfatheredLease, setGrandfatheredLease] = useState(false)
   const [interestRate, setInterestRate] = useState('8.0')
   const [showLoanComparison, setShowLoanComparison] = useState(false)
   const [loanComparisonRate, setLoanComparisonRate] = useState('9.0')
@@ -65,6 +69,8 @@ export function InputForm({ onCalculate }: InputFormProps) {
       vehicleCost: parseFloat(vehicleCost) || 0,
       vehicleType,
       phevDeliveredBeforeApril2025: phevBefore,
+      leaseStartDate: new Date(leaseStartDate),
+      grandfatheredLease,
       interestRate: parseFloat(interestRate) / 100 || 0,
       showLoanComparison,
       loanComparisonRate: showLoanComparison ? (parseFloat(loanComparisonRate) / 100 || 0) : 0,
@@ -144,6 +150,36 @@ export function InputForm({ onCalculate }: InputFormProps) {
                   className="rounded"
                 />
                 Delivered before 1 April 2025
+              </label>
+            </InputField>
+          )}
+
+          <InputField
+            label="Lease start date"
+            hint="Used to determine which FBT phase rules apply to this lease"
+          >
+            <input
+              type="date"
+              className={inputCls}
+              value={leaseStartDate}
+              onChange={e => setLeaseStartDate(e.target.value)}
+              required
+            />
+          </InputField>
+
+          {vehicleType === 'BEV' && (
+            <InputField
+              label="Grandfathered lease"
+              hint="Leases entered into before 1 April 2027 keep full Phase 1 FBT exemption for the entire lease term, regardless of when the lease ends"
+            >
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={grandfatheredLease}
+                  onChange={e => setGrandfatheredLease(e.target.checked)}
+                  className="rounded"
+                />
+                Lease entered into before 1 April 2027 (grandfathered)
               </label>
             </InputField>
           )}
