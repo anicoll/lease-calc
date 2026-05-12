@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.4.0] – 2026-05-12
+
+### Changed
+- **Lease term comparison table** – removed the single lease term selector; the calculator now runs all 5 terms (1–5 years) simultaneously and displays a side-by-side comparison table showing monthly payment, residual value, total interest cost, annual tax saving, and net out-of-pocket for each term
+- Clicking a column in the comparison table expands the full breakdown for that term
+
 ## [0.3.0] – 2026-04-01
 
 ### Added

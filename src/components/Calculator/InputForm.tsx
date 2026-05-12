@@ -1,13 +1,12 @@
 import { useState } from 'react'
-import type { AustralianState, LeaseInputs, RunningCosts, VehicleType } from '../../types'
+import type { AustralianState, MultiTermLeaseInputs, RunningCosts, VehicleType } from '../../types'
 import { InputField } from '../ui/InputField'
 import { SectionCard } from '../ui/SectionCard'
-import { ATO_RESIDUALS } from '../../lib/constants'
 
 const STATES: AustralianState[] = ['NSW', 'VIC', 'QLD', 'SA', 'WA', 'TAS', 'ACT', 'NT']
 
 interface InputFormProps {
-  onCalculate: (inputs: LeaseInputs) => void
+  onCalculate: (inputs: MultiTermLeaseInputs) => void
 }
 
 export function InputForm({ onCalculate }: InputFormProps) {
@@ -15,24 +14,21 @@ export function InputForm({ onCalculate }: InputFormProps) {
   const [vehicleCost, setVehicleCost] = useState('65000')
   const [vehicleType, setVehicleType] = useState<VehicleType>('BEV')
   const [phevBefore, setPhevBefore] = useState(true)
-  const [interestRate, setInterestRate] = useState('7.5')
+  const [interestRate, setInterestRate] = useState('8.0')
   const [showLoanComparison, setShowLoanComparison] = useState(false)
   const [loanComparisonRate, setLoanComparisonRate] = useState('9.0')
   const [loanComparisonResidual, setLoanComparisonResidual] = useState('0')
-  const [termYears, setTermYears] = useState('5')
   const [useCustomResidual, setUseCustomResidual] = useState(false)
   const [customResidual, setCustomResidual] = useState('')
-  const [managementFee, setManagementFee] = useState('100')
-  const [state, setState] = useState<AustralianState>('NSW')
+  const [managementFee, setManagementFee] = useState('13')
+  const [state, setState] = useState<AustralianState>('SA')
 
   const [runningCostPeriod, setRunningCostPeriod] = useState<'monthly' | 'annual'>('monthly')
-  const [fuel, setFuel] = useState('210')
+  const [fuel, setFuel] = useState('45')
   const [registration, setRegistration] = useState('70')
-  const [insurance, setInsurance] = useState('125')
+  const [insurance, setInsurance] = useState('140')
   const [tyres, setTyres] = useState('50')
   const [maintenance, setMaintenance] = useState('65')
-
-  const atoResidual = ATO_RESIDUALS[parseInt(termYears)] ?? ATO_RESIDUALS[5]!
 
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -73,7 +69,6 @@ export function InputForm({ onCalculate }: InputFormProps) {
       showLoanComparison,
       loanComparisonRate: showLoanComparison ? (parseFloat(loanComparisonRate) / 100 || 0) : 0,
       loanComparisonResidual: showLoanComparison ? (parseFloat(loanComparisonResidual) || 0) : 0,
-      termYears: parseInt(termYears) || 5,
       customResidualPercent,
       annualManagementFee: (parseFloat(managementFee) || 0) * 12,
       runningCosts,
@@ -173,17 +168,9 @@ export function InputForm({ onCalculate }: InputFormProps) {
             </div>
           </InputField>
 
-          <InputField label="Lease term">
-            <select className={selectCls} value={termYears} onChange={e => setTermYears(e.target.value)}>
-              {[1, 2, 3, 4, 5].map(y => (
-                <option key={y} value={y}>{y} year{y > 1 ? 's' : ''}</option>
-              ))}
-            </select>
-          </InputField>
-
           <InputField
             label="Residual value"
-            hint={`ATO minimum for ${termYears}-year lease: ${(atoResidual * 100).toFixed(2)}%`}
+            hint="Leave blank to use ATO minimums (1yr: 65.63%, 2yr: 56.25%, 3yr: 46.88%, 4yr: 37.50%, 5yr: 28.13%). A custom % applies to all terms."
             error={errors.customResidual}
           >
             <div className="flex items-center gap-2">
@@ -203,10 +190,9 @@ export function InputForm({ onCalculate }: InputFormProps) {
                     className={inputCls + ' pr-8'}
                     value={customResidual}
                     onChange={e => setCustomResidual(e.target.value)}
-                    placeholder={((atoResidual * 100).toFixed(2))}
+                    placeholder="e.g. 35"
                     min="0"
                     max="100"
-                   
                   />
                   <span className="absolute right-3 top-2 text-gray-400 text-sm">%</span>
                 </div>
@@ -214,7 +200,7 @@ export function InputForm({ onCalculate }: InputFormProps) {
             </div>
           </InputField>
 
-          <InputField label="Monthly management / admin fee" hint="Charged by the novated lease provider, typically $65–$130/month">
+          <InputField label="Monthly management / admin fee" hint="Charged by the novated lease provider, typically $10–$30/month">
             <div className="relative">
               <span className="absolute left-3 top-2 text-gray-400 text-sm">$</span>
               <input

@@ -1,10 +1,10 @@
 import { calculateStampDuty } from '../constants'
-import type { AnalyserInputs, AnalyserResult, LeaseInputs, LeaseResult } from '../../types'
+import type { AnalyserInputs, AnalyserResult, LeaseResult, MultiTermLeaseInputs } from '../../types'
 import { ecmAnnualContribution, isFbtExempt } from './fbt'
 import { atoResidualPercent, impliedAnnualRate, lct, pmt, residualValue } from './lease'
 import { totalTax } from './tax'
 
-export function calculateNovatedLease(inputs: LeaseInputs): LeaseResult {
+export function calculateNovatedLease(inputs: MultiTermLeaseInputs, termYears: number): LeaseResult {
   const {
     grossSalary,
     vehicleCost,
@@ -14,7 +14,6 @@ export function calculateNovatedLease(inputs: LeaseInputs): LeaseResult {
     showLoanComparison,
     loanComparisonRate,
     loanComparisonResidual,
-    termYears,
     customResidualPercent,
     annualManagementFee,
     runningCosts,
@@ -87,6 +86,8 @@ export function calculateNovatedLease(inputs: LeaseInputs): LeaseResult {
   const annualSavingVsLoan = comparisonAnnualTotal - netAnnualCost
 
   return {
+    termYears,
+    interestCost: (monthlyLeasePayment * termYears * 12) + residual - vehicleCost,
     fbtExempt,
     lctApplied,
     stampDutyApplied,
@@ -114,6 +115,10 @@ export function calculateNovatedLease(inputs: LeaseInputs): LeaseResult {
     comparisonAnnualTotal,
     annualSavingVsLoan,
   }
+}
+
+export function calculateAllLeaseTerms(inputs: MultiTermLeaseInputs): LeaseResult[] {
+  return [1, 2, 3, 4, 5].map(termYears => calculateNovatedLease(inputs, termYears))
 }
 
 export function analyseExistingLease(inputs: AnalyserInputs): AnalyserResult {
