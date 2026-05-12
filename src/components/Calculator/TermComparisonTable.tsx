@@ -14,13 +14,19 @@ interface Props {
   onSelectTerm: (term: number) => void
 }
 
-const ROWS: { label: string; render: (r: LeaseResult) => string; hint?: string }[] = [
+const ROWS: { label: string; render: (r: LeaseResult) => string; hint?: string; total?: boolean }[] = [
   { label: 'Monthly lease payment', render: r => fmt(r.monthlyLeasePayment) },
   { label: 'Residual value', render: r => `${fmt(r.residualValue)} (${fmtPct(r.residualPercent)})` },
   { label: 'Total interest cost', render: r => fmt(r.interestCost), hint: 'Total finance charges paid over the lease term' },
   { label: 'Annual tax saving', render: r => fmt(r.annualTaxSaving) },
   { label: 'Net annual out-of-pocket', render: r => fmt(r.netAnnualCost) },
   { label: 'Effective monthly out-of-pocket', render: r => fmt(r.effectiveMonthlyOutOfPocket) },
+  {
+    label: 'Total lifetime cost',
+    render: r => fmt(r.netAnnualCost * r.termYears + r.residualValue),
+    hint: 'Net out-of-pocket × years + residual. Assumes costs stay flat year to year.',
+    total: true,
+  },
 ]
 
 export function TermComparisonTable({ results, selectedTerm, onSelectTerm }: Props) {
@@ -71,11 +77,11 @@ export function TermComparisonTable({ results, selectedTerm, onSelectTerm }: Pro
             </thead>
             <tbody>
               {ROWS.map(row => (
-                <tr key={row.label} className="border-t border-gray-100">
-                  <td className="py-2.5 pr-4 text-xs text-gray-500">
+                <tr key={row.label} className={['border-t', row.total ? 'border-gray-300' : 'border-gray-100'].join(' ')}>
+                  <td className={['py-2.5 pr-4 text-xs', row.total ? 'font-semibold text-gray-700' : 'text-gray-500'].join(' ')}>
                     {row.label}
                     {row.hint && (
-                      <span className="block text-gray-400">{row.hint}</span>
+                      <span className="block font-normal text-gray-400">{row.hint}</span>
                     )}
                   </td>
                   {results.map(r => {
@@ -85,7 +91,9 @@ export function TermComparisonTable({ results, selectedTerm, onSelectTerm }: Pro
                         key={r.termYears}
                         className={[
                           'py-2.5 px-3 text-center text-xs tabular-nums',
-                          isSelected ? 'bg-blue-50 font-semibold text-blue-900' : 'text-gray-800',
+                          row.total ? 'font-bold' : '',
+                          isSelected ? 'bg-blue-50 text-blue-900' : 'text-gray-800',
+                          row.total && isSelected ? 'font-bold' : '',
                         ].join(' ')}
                       >
                         {row.render(r)}
