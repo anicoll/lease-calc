@@ -31,15 +31,26 @@ export function ResultsPanel({ result }: ResultsPanelProps) {
       <div
         className={[
           'rounded-xl px-4 py-3 text-sm font-medium',
-          result.fbtExempt
+          result.fbtExemptionStatus === 'full'
             ? 'bg-green-50 text-green-800 border border-green-200'
-            : 'bg-amber-50 text-amber-800 border border-amber-200',
+            : result.fbtExemptionStatus === 'partial'
+              ? 'bg-blue-50 text-blue-800 border border-blue-200'
+              : 'bg-amber-50 text-amber-800 border border-amber-200',
         ].join(' ')}
       >
-        {result.fbtExempt
-          ? '✓ This vehicle qualifies for the FBT (Fringe Benefits Tax) exemption — no FBT applies.'
-          : '⚠ FBT (Fringe Benefits Tax) applies to this vehicle. A post-tax ECM (Employee Contribution Method) contribution is required to eliminate FBT liability.'}
+        {result.fbtExemptionStatus === 'full'
+          ? '✓ FBT Exempt — this vehicle qualifies for the full FBT exemption. No FBT applies.'
+          : result.fbtExemptionStatus === 'partial'
+            ? '◑ Partial FBT Exemption (25% exempt) — 75% of the standard FBT is payable. A reduced post-tax ECM contribution is required.'
+            : '⚠ FBT applies — a post-tax ECM (Employee Contribution Method) contribution is required to eliminate FBT liability.'}
       </div>
+
+      {/* FBT phase-crossing warning */}
+      {result.fbtPhaseWarning && (
+        <div className="rounded-xl px-4 py-3 text-sm bg-yellow-50 text-yellow-800 border border-yellow-200">
+          ⚠ {result.fbtPhaseWarning}
+        </div>
+      )}
 
       {/* Payment period summary */}
       <SectionCard title="Payment Summary">
@@ -69,12 +80,14 @@ export function ResultsPanel({ result }: ResultsPanelProps) {
           value={perPeriod(result.annualPreTaxDeduction)}
           hint="Deducted from gross salary before income tax is calculated"
         />
-        {!result.fbtExempt && (
+        {result.fbtExemptionStatus !== 'full' && (
           <ResultRow
             label={`Post-tax ECM contribution (${periodLabel})`}
             value={perPeriod(result.annualPostTaxDeduction)}
             negative
-            hint="Required after-tax contribution to eliminate FBT (Employee Contribution Method)"
+            hint={result.fbtExemptionStatus === 'partial'
+              ? 'Reduced after-tax ECM contribution covering the 75% FBT-exposed portion (Employee Contribution Method)'
+              : 'Required after-tax contribution to eliminate FBT (Employee Contribution Method)'}
           />
         )}
         <ResultRow
@@ -95,7 +108,7 @@ export function ResultsPanel({ result }: ResultsPanelProps) {
           value={fmt(result.annualPreTaxDeduction)}
           highlight
         />
-        {!result.fbtExempt && (
+        {result.fbtExemptionStatus !== 'full' && (
           <ResultRow
             label="Post-tax ECM contribution"
             value={fmt(result.annualPostTaxDeduction)}

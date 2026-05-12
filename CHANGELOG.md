@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.5.0] – 2026-05-12
+
+### Added
+- **FBT phase-out support** – calculator now models the three-phase reduction of the BEV FBT exemption announced in the May 2026 Federal Budget
+  - Phase 1 (now – 31 March 2027): full exemption unchanged for BEVs under $91,387
+  - Phase 2 (1 April 2027 – 31 March 2029): full exemption for BEVs ≤ $75,000; 25% exemption (75% FBT payable) for BEVs $75,001–$91,387
+  - Phase 3 (from 1 April 2029): 25% exemption for all BEVs under the LCT threshold
+- **Lease start date input** – used to determine which phase rules apply; defaults to today
+- **Grandfathering checkbox** – leases entered into before 1 April 2027 retain full Phase 1 exemption for the entire lease term
+- **Phase-crossing warning** – shown when a Phase 2 lease will run into Phase 3, so users understand future rule changes won't affect their existing lease
+
+### Changed
+- FBT status now shows three states: *FBT Exempt*, *Partial FBT Exemption (25% exempt)*, and *Subject to FBT*, replacing the previous binary exempt/not-exempt display
+- ECM post-tax contribution is reduced for partially exempt vehicles (covers only the 75% FBT-exposed portion)
+
 ## [0.4.0] – 2026-05-12
 
 ### Changed

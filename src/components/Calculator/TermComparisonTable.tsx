@@ -30,21 +30,25 @@ const ROWS: { label: string; render: (r: LeaseResult) => string; hint?: string; 
 ]
 
 export function TermComparisonTable({ results, selectedTerm, onSelectTerm }: Props) {
-  const fbtExempt = results[0]?.fbtExempt ?? true
+  const fbtStatus = results[0]?.fbtExemptionStatus ?? 'full'
 
   return (
     <div className="flex flex-col gap-4">
       <div
         className={[
           'rounded-xl px-4 py-3 text-sm font-medium',
-          fbtExempt
+          fbtStatus === 'full'
             ? 'bg-green-50 text-green-800 border border-green-200'
-            : 'bg-amber-50 text-amber-800 border border-amber-200',
+            : fbtStatus === 'partial'
+              ? 'bg-blue-50 text-blue-800 border border-blue-200'
+              : 'bg-amber-50 text-amber-800 border border-amber-200',
         ].join(' ')}
       >
-        {fbtExempt
-          ? '✓ This vehicle qualifies for the FBT (Fringe Benefits Tax) exemption — no FBT applies.'
-          : '⚠ FBT (Fringe Benefits Tax) applies to this vehicle. A post-tax ECM (Employee Contribution Method) contribution is required to eliminate FBT liability.'}
+        {fbtStatus === 'full'
+          ? '✓ FBT Exempt — this vehicle qualifies for the full FBT exemption. No FBT applies.'
+          : fbtStatus === 'partial'
+            ? '◑ Partial FBT Exemption (25% exempt) — 75% of the standard FBT is payable. A reduced post-tax ECM contribution is required.'
+            : '⚠ FBT applies — a post-tax ECM (Employee Contribution Method) contribution is required to eliminate FBT liability.'}
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border overflow-x-auto">

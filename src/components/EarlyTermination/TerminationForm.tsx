@@ -13,6 +13,7 @@ export function TerminationForm({ onCalculate }: TerminationFormProps) {
   const [vehicleBaseValue, setVehicleBaseValue] = useState('65000')
   const [vehicleType, setVehicleType] = useState<VehicleType>('BEV')
   const [phevBefore, setPhevBefore] = useState(true)
+  const [grandfatheredLease, setGrandfatheredLease] = useState(false)
   const [originalTermMonths, setOriginalTermMonths] = useState('60')
   const [monthsElapsed, setMonthsElapsed] = useState('24')
   const [interestRate, setInterestRate] = useState('7.5')
@@ -69,6 +70,7 @@ export function TerminationForm({ onCalculate }: TerminationFormProps) {
       currentMarketValue: currentMarketValue ? parseFloat(currentMarketValue) : null,
       vehicleType,
       phevDeliveredBeforeApril2025: phevBefore,
+      grandfatheredLease,
       terminationDate: new Date(terminationDate),
     })
   }
@@ -126,6 +128,18 @@ export function TerminationForm({ onCalculate }: TerminationFormProps) {
                 onChange={e => setPhevBefore(e.target.checked)}
               />
               <span>Vehicle was delivered before 1 April 2025 (FBT exemption eligibility)</span>
+            </label>
+          )}
+
+          {vehicleType === 'BEV' && (
+            <label className="flex items-start gap-2 text-sm text-gray-700 cursor-pointer">
+              <input
+                type="checkbox"
+                className="mt-0.5"
+                checked={grandfatheredLease}
+                onChange={e => setGrandfatheredLease(e.target.checked)}
+              />
+              <span>Lease entered into before 1 April 2027 (grandfathered — full Phase 1 exemption applies for the full lease term)</span>
             </label>
           )}
         </div>
