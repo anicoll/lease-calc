@@ -19,14 +19,17 @@ export interface LeaseInputs {
   showLoanComparison: boolean
   loanComparisonRate: number
   loanComparisonResidual: number
-  termYears: number
   customResidualPercent: number | null
   annualManagementFee: number
   runningCosts: RunningCosts
   state: AustralianState
 }
 
+export type MultiTermLeaseInputs = LeaseInputs
+
 export interface LeaseResult {
+  termYears: number
+  interestCost: number
   fbtExempt: boolean
   lctApplied: number
   stampDutyApplied: number

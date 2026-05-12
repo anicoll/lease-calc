@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import type { LeaseResult } from '../../types'
-import { DownloadPdfButton } from '../ui/DownloadPdfButton'
 import { ResultRow } from '../ui/ResultRow'
 import { SectionCard } from '../ui/SectionCard'
 
@@ -27,7 +26,7 @@ export function ResultsPanel({ result }: ResultsPanelProps) {
   const perPeriod = (annual: number) => fmt(annual / divisor)
 
   return (
-    <div id="pdf-calculator-results" className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4">
       {/* FBT Status Banner */}
       <div
         className={[
@@ -201,7 +200,6 @@ export function ResultsPanel({ result }: ResultsPanelProps) {
           </p>
         </SectionCard>
       )}
-      <DownloadPdfButton elementId="pdf-calculator-results" filename="novated-lease-calculator.pdf" />
     </div>
   )
 }
