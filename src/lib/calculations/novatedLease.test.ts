@@ -133,6 +133,11 @@ describe('calculateNovatedLease — FBT-exempt BEV', () => {
     const result = calculateNovatedLease(baseInputs, 5)
     expect(result.interestCost).toBeGreaterThan(0)
   })
+
+  it('grossSalary is included in result', () => {
+    const result = calculateNovatedLease(baseInputs, 5)
+    expect(result.grossSalary).toBe(baseInputs.grossSalary)
+  })
 })
 
 // ── calculateNovatedLease — ICE (FBT not exempt, ECM applies) ─────────────────

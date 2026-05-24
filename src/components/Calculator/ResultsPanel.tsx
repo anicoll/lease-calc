@@ -96,6 +96,20 @@ export function ResultsPanel({ result }: ResultsPanelProps) {
           highlight
           hint="Net cost after income tax savings"
         />
+
+        <div className="border-t border-gray-100 mt-3 pt-3">
+          <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Estimated Take-home Pay</div>
+          <ResultRow
+            label={`Before lease (${periodLabel})`}
+            value={perPeriod(result.grossSalary - result.taxBeforeSacrifice)}
+            hint="Estimated net take-home pay before the lease (gross salary minus income tax)"
+          />
+          <ResultRow
+            label={`After lease (${periodLabel})`}
+            value={perPeriod(result.newTaxableIncome - result.taxAfterSacrifice - result.annualPostTaxDeduction)}
+            hint="Estimated net take-home pay after lease deductions, running costs, and tax savings"
+          />
+        </div>
       </SectionCard>
 
       {/* Annual Summary */}

@@ -20,3 +20,6 @@ test-ci:
 		-W .github/workflows/test.yml \
 		--container-architecture linux/amd64 \
 		-P ubuntu-latest=catthehacker/ubuntu:act-latest
+
+dev:
+	npm run dev
