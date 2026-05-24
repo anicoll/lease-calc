@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { AnalyserInputs } from '../../types'
 import { InputField } from '../ui/InputField'
 import { SectionCard } from '../ui/SectionCard'
+import { getSavedAnalyserInputs, saveAnalyserInputs, getPreferences } from '../../lib/storage'
 
 type PayPeriod = 'fortnightly' | 'monthly'
 
@@ -14,13 +15,37 @@ interface AnalyserFormProps {
 }
 
 export function AnalyserForm({ onAnalyse }: AnalyserFormProps) {
-  const [vehicleBaseValue, setVehicleBaseValue] = useState('65000')
-  const [termRemainingMonths, setTermRemainingMonths] = useState('60')
-  const [payPeriod, setPayPeriod] = useState<PayPeriod>('fortnightly')
-  const [preTax, setPreTax] = useState('830')
-  const [managementFee, setManagementFee] = useState('13')
-  const [runningCosts, setRunningCosts] = useState('500')
-  const [benchmarkRate, setBenchmarkRate] = useState('8.0')
+  const saved = getSavedAnalyserInputs()
+
+  const [vehicleBaseValue, setVehicleBaseValue] = useState(saved?.vehicleBaseValue ?? '65000')
+  const [termRemainingMonths, setTermRemainingMonths] = useState(saved?.termRemainingMonths ?? '60')
+  const [payPeriod, setPayPeriod] = useState<PayPeriod>(saved?.payPeriod ?? 'fortnightly')
+  const [preTax, setPreTax] = useState(saved?.preTax ?? '830')
+  const [managementFee, setManagementFee] = useState(saved?.managementFee ?? '13')
+  const [runningCosts, setRunningCosts] = useState(saved?.runningCosts ?? '500')
+  const [benchmarkRate, setBenchmarkRate] = useState(saved?.benchmarkRate ?? '8.0')
+
+  useEffect(() => {
+    if (getPreferences().autoSave) {
+      saveAnalyserInputs({
+        vehicleBaseValue,
+        termRemainingMonths,
+        payPeriod,
+        preTax,
+        managementFee,
+        runningCosts,
+        benchmarkRate,
+      })
+    }
+  }, [
+    vehicleBaseValue,
+    termRemainingMonths,
+    payPeriod,
+    preTax,
+    managementFee,
+    runningCosts,
+    benchmarkRate,
+  ])
 
   const inputCls = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
 
