@@ -35,10 +35,10 @@ export const ATO_RESIDUALS: Record<number, number> = {
 // ── Income Tax 2024-25 ──────────────────────────────────────────────────────
 export const TAX_BRACKETS = [
   { min: 0,       max: 18_200,  base: 0,      rate: 0     },
-  { min: 18_201,  max: 45_000,  base: 0,      rate: 0.19  },
-  { min: 45_001,  max: 135_000, base: 5_092,  rate: 0.325 },
-  { min: 135_001, max: 190_000, base: 34_342, rate: 0.37  },
-  { min: 190_001, max: Infinity,base: 55_042, rate: 0.45  },
+  { min: 18_201,  max: 45_000,  base: 0,      rate: 0.16  },
+  { min: 45_001,  max: 135_000, base: 4_288,  rate: 0.30  },
+  { min: 135_001, max: 190_000, base: 31_288, rate: 0.37  },
+  { min: 190_001, max: Infinity,base: 51_638, rate: 0.45  },
 ]
 
 // ── Medicare Levy ───────────────────────────────────────────────────────────
