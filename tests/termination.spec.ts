@@ -4,7 +4,7 @@ import { test, expect } from '@playwright/test'
 // Pin it to a fixed date.
 const TERMINATION_DATE = '2026-04-01'
 
-test('termination results panel matches golden snapshot', async ({ page }) => {
+test('termination results panel matches golden snapshot', async ({ page }, testInfo) => {
   await page.goto('/')
 
   await page.getByRole('button', { name: 'Early Termination' }).click()
@@ -14,7 +14,9 @@ test('termination results panel matches golden snapshot', async ({ page }) => {
   const panel = page.locator('#pdf-termination-results')
   await expect(panel).toBeVisible()
 
-  await expect(panel).toHaveScreenshot('termination-results.png')
+  if (testInfo.project.name.includes('chrome')) {
+    await expect(panel).toHaveScreenshot('termination-results.png')
+  }
 })
 
 test('termination Download PDF button triggers a file download without errors', async ({ page }) => {

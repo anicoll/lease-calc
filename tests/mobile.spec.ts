@@ -120,7 +120,7 @@ test.describe('v0.5 – FBT phase inputs on mobile', () => {
     // Default inputs: BEV at $65,000, today's date → full exemption.
     await page.getByRole('button', { name: 'Calculate' }).click()
 
-    const banner = page.locator('div').filter({ hasText: /✓ FBT Exempt/ }).first()
+    const banner = page.locator('div').filter({ hasText: /FBT Exempt/ }).first()
     await banner.scrollIntoViewIfNeeded()
     await expect(banner).toBeVisible()
 
@@ -139,7 +139,7 @@ test.describe('v0.5 – FBT phase inputs on mobile', () => {
 
     await page.getByRole('button', { name: 'Calculate' }).click()
 
-    const banner = page.locator('div').filter({ hasText: /◑ Partial FBT Exemption/ }).first()
+    const banner = page.locator('div').filter({ hasText: /Partial FBT Exemption/ }).first()
     await banner.scrollIntoViewIfNeeded()
     await expect(banner).toBeVisible()
   })

@@ -25,14 +25,26 @@ export function AnalyserResults({ result }: AnalyserResultsProps) {
     <div id="pdf-analyser-results" className="flex flex-col gap-4">
       {/* Summary banner */}
       <div className={[
-        'rounded-xl px-4 py-3 text-sm font-medium',
+        'rounded-xl px-4 py-3 text-sm font-medium flex items-start gap-2',
         overcharging
           ? 'bg-red-50 text-red-800 border border-red-200'
           : 'bg-green-50 text-green-800 border border-green-200',
       ].join(' ')}>
-        {overcharging
-          ? `⚠ Based on this analysis, you may be paying approximately ${fmt(result.annualOvercharge)} more per year than a benchmark lease at your chosen rate.`
-          : `✓ Your lease payments appear to be in line with (or below) the benchmark rate.`}
+        {overcharging ? (
+          <>
+            <svg className="w-4 h-4 mt-0.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"></path>
+            </svg>
+            <span>Based on this analysis, you may be paying approximately {fmt(result.annualOvercharge)} more per year than a benchmark lease at your chosen rate.</span>
+          </>
+        ) : (
+          <>
+            <svg className="w-4 h-4 mt-0.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
+            </svg>
+            <span>Your lease payments appear to be in line with (or below) the benchmark rate.</span>
+          </>
+        )}
       </div>
 
       <SectionCard title="Interest Rate Analysis">

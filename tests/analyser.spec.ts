@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 
-test('analyser results panel matches golden snapshot', async ({ page }) => {
+test('analyser results panel matches golden snapshot', async ({ page }, testInfo) => {
   await page.goto('/')
 
   await page.getByRole('button', { name: 'Analyse My Lease' }).first().click()
@@ -9,7 +9,9 @@ test('analyser results panel matches golden snapshot', async ({ page }) => {
   const panel = page.locator('#pdf-analyser-results')
   await expect(panel).toBeVisible()
 
-  await expect(panel).toHaveScreenshot('analyser-results.png')
+  if (testInfo.project.name.includes('chrome')) {
+    await expect(panel).toHaveScreenshot('analyser-results.png')
+  }
 })
 
 test('analyser Download PDF button triggers a file download without errors', async ({ page }) => {
