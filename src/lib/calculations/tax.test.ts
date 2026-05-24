@@ -28,36 +28,36 @@ describe('incomeTax', () => {
     expect(incomeTax(18_200)).toBe(0)
   })
 
-  it('applies 19% rate for income in the $18,201–$45,000 bracket', () => {
-    // At $18,201: base=0, (18201 - 18201 + 1) * 0.19 = 0.19
-    expect(incomeTax(18_201)).toBeCloseTo(0.19, 2)
-    // At $30,000: (30000 - 18201 + 1) * 0.19 = 11800 * 0.19 = 2242
-    expect(incomeTax(30_000)).toBeCloseTo(2_242, 0)
-    // At $45,000: (45000 - 18201 + 1) * 0.19 = 26800 * 0.19 = 5092
-    expect(incomeTax(45_000)).toBeCloseTo(5_092, 0)
+  it('applies 16% rate for income in the $18,201–$45,000 bracket', () => {
+    // At $18,201: base=0, (18201 - 18201 + 1) * 0.16 = 0.16
+    expect(incomeTax(18_201)).toBeCloseTo(0.16, 2)
+    // At $30,000: (30000 - 18201 + 1) * 0.16 = 11800 * 0.16 = 1888
+    expect(incomeTax(30_000)).toBeCloseTo(1_888, 0)
+    // At $45,000: (45000 - 18201 + 1) * 0.16 = 26800 * 0.16 = 4288
+    expect(incomeTax(45_000)).toBeCloseTo(4_288, 0)
   })
 
-  it('applies 32.5% rate for income in the $45,001–$135,000 bracket', () => {
-    // At $45,001: base=5092, (45001 - 45001 + 1) * 0.325 = 0.325
-    expect(incomeTax(45_001)).toBeCloseTo(5_092.325, 2)
-    // At $100,000: 5092 + (100000 - 45001 + 1) * 0.325 = 5092 + 55000 * 0.325 = 22967
-    expect(incomeTax(100_000)).toBeCloseTo(22_967, 0)
-    // At $135,000: 5092 + (135000 - 45001 + 1) * 0.325 = 5092 + 90000 * 0.325 = 34342
-    expect(incomeTax(135_000)).toBeCloseTo(34_342, 0)
+  it('applies 30% rate for income in the $45,001–$135,000 bracket', () => {
+    // At $45,001: base=4288, (45001 - 45001 + 1) * 0.30 = 0.30
+    expect(incomeTax(45_001)).toBeCloseTo(4_288.30, 2)
+    // At $100,000: 4288 + (100000 - 45001 + 1) * 0.30 = 4288 + 55000 * 0.30 = 20788
+    expect(incomeTax(100_000)).toBeCloseTo(20_788, 0)
+    // At $135,000: 4288 + (135000 - 45001 + 1) * 0.30 = 4288 + 90000 * 0.30 = 31288
+    expect(incomeTax(135_000)).toBeCloseTo(31_288, 0)
   })
 
   it('applies 37% rate for income in the $135,001–$190,000 bracket', () => {
-    // At $150,000: 34342 + (150000 - 135001 + 1) * 0.37 = 34342 + 15000 * 0.37 = 39892
-    expect(incomeTax(150_000)).toBeCloseTo(39_892, 0)
-    // At $190,000: 34342 + (190000 - 135001 + 1) * 0.37 = 34342 + 55000 * 0.37 = 54692
-    expect(incomeTax(190_000)).toBeCloseTo(54_692, 0)
+    // At $150,000: 31288 + (150000 - 135001 + 1) * 0.37 = 31288 + 15000 * 0.37 = 36838
+    expect(incomeTax(150_000)).toBeCloseTo(36_838, 0)
+    // At $190,000: 31288 + (190000 - 135001 + 1) * 0.37 = 31288 + 55000 * 0.37 = 51638
+    expect(incomeTax(190_000)).toBeCloseTo(51_638, 0)
   })
 
   it('applies 45% rate for income above $190,000', () => {
-    // At $200,000: 55042 + (200000 - 190001 + 1) * 0.45 = 55042 + 10000 * 0.45 = 59542
-    expect(incomeTax(200_000)).toBeCloseTo(59_542, 0)
-    // At $300,000: 55042 + (300000 - 190001 + 1) * 0.45 = 55042 + 110000 * 0.45 = 104542
-    expect(incomeTax(300_000)).toBeCloseTo(104_542, 0)
+    // At $200,000: 51638 + (200000 - 190001 + 1) * 0.45 = 51638 + 10000 * 0.45 = 56138
+    expect(incomeTax(200_000)).toBeCloseTo(56_138, 0)
+    // At $300,000: 51638 + (300000 - 190001 + 1) * 0.45 = 51638 + 110000 * 0.45 = 101138
+    expect(incomeTax(300_000)).toBeCloseTo(101_138, 0)
   })
 
   it('tax increases monotonically with income', () => {
@@ -159,8 +159,8 @@ describe('totalTax', () => {
   })
 
   it('gives a known total tax for $100,000 income', () => {
-    // incomeTax(100000) = 22967, medicareLevy = 2000, lito = 0
-    expect(totalTax(100_000)).toBeCloseTo(24_967, 0)
+    // incomeTax(100000) = 20788, medicareLevy = 2000, lito = 0
+    expect(totalTax(100_000)).toBeCloseTo(22_788, 0)
   })
 
   it('increases with income across standard brackets', () => {
@@ -171,7 +171,7 @@ describe('totalTax', () => {
   })
 
   it('subtracts LITO from tax for lower incomes', () => {
-    // At $30,000: incomeTax = 2242, medicare = 300 (shade-in), lito = 700
+    // At $30,000: incomeTax = 1888, medicare = 300 (shade-in), lito = 700
     // totalTax should be less than incomeTax + medicareLevy alone
     const income = 30_000
     expect(totalTax(income)).toBeLessThan(incomeTax(income) + medicareLevy(income))
@@ -186,12 +186,12 @@ describe('marginalRate', () => {
     expect(marginalRate(18_200)).toBeCloseTo(0.02, 4)
   })
 
-  it('returns 0.19 + 0.02 = 0.21 for income in the 19% bracket', () => {
-    expect(marginalRate(30_000)).toBeCloseTo(0.21, 4)
+  it('returns 0.16 + 0.02 = 0.18 for income in the 16% bracket', () => {
+    expect(marginalRate(30_000)).toBeCloseTo(0.18, 4)
   })
 
-  it('returns 0.325 + 0.02 = 0.345 for income in the 32.5% bracket', () => {
-    expect(marginalRate(100_000)).toBeCloseTo(0.345, 4)
+  it('returns 0.30 + 0.02 = 0.32 for income in the 30% bracket', () => {
+    expect(marginalRate(100_000)).toBeCloseTo(0.32, 4)
   })
 
   it('returns 0.37 + 0.02 = 0.39 for income in the 37% bracket', () => {
