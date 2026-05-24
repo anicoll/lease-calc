@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { AustralianState, MultiTermLeaseInputs, RunningCosts, VehicleType } from '../../types'
 import { InputField } from '../ui/InputField'
 import { SectionCard } from '../ui/SectionCard'
+import { getSavedCalculatorInputs, saveCalculatorInputs, getPreferences } from '../../lib/storage'
 
 const STATES: AustralianState[] = ['NSW', 'VIC', 'QLD', 'SA', 'WA', 'TAS', 'ACT', 'NT']
 
@@ -10,31 +11,81 @@ interface InputFormProps {
 }
 
 export function InputForm({ onCalculate }: InputFormProps) {
-  const [grossSalary, setGrossSalary] = useState('120000')
-  const [vehicleCost, setVehicleCost] = useState('65000')
-  const [vehicleType, setVehicleType] = useState<VehicleType>('BEV')
-  const [phevBefore, setPhevBefore] = useState(true)
-  const [leaseStartDate, setLeaseStartDate] = useState(
-    () => new Date().toISOString().split('T')[0],
-  )
-  const [grandfatheredLease, setGrandfatheredLease] = useState(false)
-  const [interestRate, setInterestRate] = useState('8.0')
-  const [showLoanComparison, setShowLoanComparison] = useState(false)
-  const [loanComparisonRate, setLoanComparisonRate] = useState('9.0')
-  const [loanComparisonResidual, setLoanComparisonResidual] = useState('0')
-  const [useCustomResidual, setUseCustomResidual] = useState(false)
-  const [customResidual, setCustomResidual] = useState('')
-  const [managementFee, setManagementFee] = useState('13')
-  const [state, setState] = useState<AustralianState>('SA')
+  const saved = getSavedCalculatorInputs()
 
-  const [runningCostPeriod, setRunningCostPeriod] = useState<'monthly' | 'annual'>('monthly')
-  const [fuel, setFuel] = useState('45')
-  const [registration, setRegistration] = useState('70')
-  const [insurance, setInsurance] = useState('140')
-  const [tyres, setTyres] = useState('50')
-  const [maintenance, setMaintenance] = useState('65')
+  const [grossSalary, setGrossSalary] = useState(saved?.grossSalary ?? '120000')
+  const [vehicleCost, setVehicleCost] = useState(saved?.vehicleCost ?? '65000')
+  const [vehicleType, setVehicleType] = useState<VehicleType>(saved?.vehicleType ?? 'BEV')
+  const [phevBefore, setPhevBefore] = useState(saved?.phevBefore ?? true)
+  const [leaseStartDate, setLeaseStartDate] = useState(
+    saved?.leaseStartDate ?? (() => new Date().toISOString().split('T')[0]),
+  )
+  const [grandfatheredLease, setGrandfatheredLease] = useState(saved?.grandfatheredLease ?? false)
+  const [interestRate, setInterestRate] = useState(saved?.interestRate ?? '8.0')
+  const [showLoanComparison, setShowLoanComparison] = useState(saved?.showLoanComparison ?? false)
+  const [loanComparisonRate, setLoanComparisonRate] = useState(saved?.loanComparisonRate ?? '9.0')
+  const [loanComparisonResidual, setLoanComparisonResidual] = useState(saved?.loanComparisonResidual ?? '0')
+  const [useCustomResidual, setUseCustomResidual] = useState(saved?.useCustomResidual ?? false)
+  const [customResidual, setCustomResidual] = useState(saved?.customResidual ?? '')
+  const [managementFee, setManagementFee] = useState(saved?.managementFee ?? '13')
+  const [state, setState] = useState<AustralianState>(saved?.state ?? 'SA')
+
+  const [runningCostPeriod, setRunningCostPeriod] = useState<'monthly' | 'annual'>(saved?.runningCostPeriod ?? 'monthly')
+  const [fuel, setFuel] = useState(saved?.fuel ?? '45')
+  const [registration, setRegistration] = useState(saved?.registration ?? '70')
+  const [insurance, setInsurance] = useState(saved?.insurance ?? '140')
+  const [tyres, setTyres] = useState(saved?.tyres ?? '50')
+  const [maintenance, setMaintenance] = useState(saved?.maintenance ?? '65')
 
   const [errors, setErrors] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    if (getPreferences().autoSave) {
+      saveCalculatorInputs({
+        grossSalary,
+        vehicleCost,
+        vehicleType,
+        phevBefore,
+        leaseStartDate,
+        grandfatheredLease,
+        interestRate,
+        showLoanComparison,
+        loanComparisonRate,
+        loanComparisonResidual,
+        useCustomResidual,
+        customResidual,
+        managementFee,
+        state,
+        runningCostPeriod,
+        fuel,
+        registration,
+        insurance,
+        tyres,
+        maintenance,
+      })
+    }
+  }, [
+    grossSalary,
+    vehicleCost,
+    vehicleType,
+    phevBefore,
+    leaseStartDate,
+    grandfatheredLease,
+    interestRate,
+    showLoanComparison,
+    loanComparisonRate,
+    loanComparisonResidual,
+    useCustomResidual,
+    customResidual,
+    managementFee,
+    state,
+    runningCostPeriod,
+    fuel,
+    registration,
+    insurance,
+    tyres,
+    maintenance,
+  ])
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

@@ -1,32 +1,71 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { EarlyTerminationInputs, VehicleType } from '../../types'
 import { InputField } from '../ui/InputField'
 import { SectionCard } from '../ui/SectionCard'
 import { ATO_RESIDUALS } from '../../lib/constants'
 import { atoResidualPercent } from '../../lib/calculations/lease'
+import { getSavedTerminationInputs, saveTerminationInputs, getPreferences } from '../../lib/storage'
 
 interface TerminationFormProps {
   onCalculate: (inputs: EarlyTerminationInputs) => void
 }
 
 export function TerminationForm({ onCalculate }: TerminationFormProps) {
-  const [vehicleBaseValue, setVehicleBaseValue] = useState('65000')
-  const [vehicleType, setVehicleType] = useState<VehicleType>('BEV')
-  const [phevBefore, setPhevBefore] = useState(true)
-  const [grandfatheredLease, setGrandfatheredLease] = useState(false)
-  const [originalTermMonths, setOriginalTermMonths] = useState('60')
-  const [monthsElapsed, setMonthsElapsed] = useState('24')
-  const [interestRate, setInterestRate] = useState('7.5')
-  const [useCustomResidual, setUseCustomResidual] = useState(false)
-  const [customResidualPct, setCustomResidualPct] = useState('')
-  const [monthlyPaymentInput, setMonthlyPaymentInput] = useState('')
-  const [monthlyManagementFee, setMonthlyManagementFee] = useState('')
-  const [terminationFeeInput, setTerminationFeeInput] = useState('')
-  const [currentMarketValue, setCurrentMarketValue] = useState('')
+  const saved = getSavedTerminationInputs()
+
+  const [vehicleBaseValue, setVehicleBaseValue] = useState(saved?.vehicleBaseValue ?? '65000')
+  const [vehicleType, setVehicleType] = useState<VehicleType>(saved?.vehicleType ?? 'BEV')
+  const [phevBefore, setPhevBefore] = useState(saved?.phevBefore ?? true)
+  const [grandfatheredLease, setGrandfatheredLease] = useState(saved?.grandfatheredLease ?? false)
+  const [originalTermMonths, setOriginalTermMonths] = useState(saved?.originalTermMonths ?? '60')
+  const [monthsElapsed, setMonthsElapsed] = useState(saved?.monthsElapsed ?? '24')
+  const [interestRate, setInterestRate] = useState(saved?.interestRate ?? '7.5')
+  const [useCustomResidual, setUseCustomResidual] = useState(saved?.useCustomResidual ?? false)
+  const [customResidualPct, setCustomResidualPct] = useState(saved?.customResidualPct ?? '')
+  const [monthlyPaymentInput, setMonthlyPaymentInput] = useState(saved?.monthlyPaymentInput ?? '')
+  const [monthlyManagementFee, setMonthlyManagementFee] = useState(saved?.monthlyManagementFee ?? '')
+  const [terminationFeeInput, setTerminationFeeInput] = useState(saved?.terminationFeeInput ?? '')
+  const [currentMarketValue, setCurrentMarketValue] = useState(saved?.currentMarketValue ?? '')
   const [terminationDate, setTerminationDate] = useState(
-    () => new Date().toISOString().split('T')[0],
+    saved?.terminationDate ?? (() => new Date().toISOString().split('T')[0]),
   )
   const [errors, setErrors] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    if (getPreferences().autoSave) {
+      saveTerminationInputs({
+        vehicleBaseValue,
+        vehicleType,
+        phevBefore,
+        grandfatheredLease,
+        originalTermMonths,
+        monthsElapsed,
+        interestRate,
+        useCustomResidual,
+        customResidualPct,
+        monthlyPaymentInput,
+        monthlyManagementFee,
+        terminationFeeInput,
+        currentMarketValue,
+        terminationDate,
+      })
+    }
+  }, [
+    vehicleBaseValue,
+    vehicleType,
+    phevBefore,
+    grandfatheredLease,
+    originalTermMonths,
+    monthsElapsed,
+    interestRate,
+    useCustomResidual,
+    customResidualPct,
+    monthlyPaymentInput,
+    monthlyManagementFee,
+    terminationFeeInput,
+    currentMarketValue,
+    terminationDate,
+  ])
 
   const inputCls = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
 

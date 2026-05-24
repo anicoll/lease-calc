@@ -13,9 +13,14 @@ import { TerminationResults } from './components/EarlyTermination/TerminationRes
 import { calculateAllLeaseTerms, analyseExistingLease } from './lib/calculations/novatedLease'
 import { calculateEarlyTermination } from './lib/calculations/earlyTermination'
 import { DownloadPdfButton } from './components/ui/DownloadPdfButton'
+import { getSavedActiveTab, saveActiveTab } from './lib/storage'
+import { ProfileSettingsModal } from './components/Layout/ProfileSettingsModal'
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<Tab>('calculator')
+  const [activeTab, setActiveTab] = useState<Tab>(() => (getSavedActiveTab() as Tab) ?? 'calculator')
+  const [showSettings, setShowSettings] = useState(false)
+  const [resetKey, setResetKey] = useState(0)
+
   const [leaseResults, setLeaseResults] = useState<LeaseResult[] | null>(null)
   const [selectedTerm, setSelectedTerm] = useState<number | null>(null)
   const [analyserResult, setAnalyserResult] = useState<AnalyserResult | null>(null)
@@ -34,22 +39,33 @@ export default function App() {
     setTerminationResult(calculateEarlyTermination(inputs))
   }
 
+  function handleReset() {
+    setResetKey(prev => prev + 1)
+    setLeaseResults(null)
+    setSelectedTerm(null)
+    setAnalyserResult(null)
+    setTerminationResult(null)
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
-      <TabNav activeTab={activeTab} onChange={(tab) => { setActiveTab(tab) }} />
+      <Header onOpenSettings={() => setShowSettings(true)} />
+      <TabNav activeTab={activeTab} onChange={(tab) => {
+        setActiveTab(tab)
+        saveActiveTab(tab)
+      }} />
 
       <main className="max-w-2xl mx-auto px-4 py-6 flex flex-col gap-6">
         {activeTab === 'calculator' ? (
-          <InputForm onCalculate={handleCalculate} />
+          <InputForm key={`calculator-${resetKey}`} onCalculate={handleCalculate} />
         ) : activeTab === 'analyser' ? (
           <>
-            <AnalyserForm onAnalyse={handleAnalyse} />
+            <AnalyserForm key={`analyser-${resetKey}`} onAnalyse={handleAnalyse} />
             {analyserResult && <AnalyserResults result={analyserResult} />}
           </>
         ) : (
           <>
-            <TerminationForm onCalculate={handleTermination} />
+            <TerminationForm key={`termination-${resetKey}`} onCalculate={handleTermination} />
             {terminationResult && <TerminationResults result={terminationResult} />}
           </>
         )}
@@ -67,6 +83,10 @@ export default function App() {
           )}
           <DownloadPdfButton elementId="pdf-calculator-results" filename="novated-lease-calculator.pdf" />
         </div>
+      )}
+
+      {showSettings && (
+        <ProfileSettingsModal onClose={() => setShowSettings(false)} onReset={handleReset} />
       )}
 
       <footer className="text-center text-xs text-gray-400 pb-4 space-y-1">
