@@ -36,7 +36,7 @@ export function TermComparisonTable({ results, selectedTerm, onSelectTerm }: Pro
     <div className="flex flex-col gap-4">
       <div
         className={[
-          'rounded-xl px-4 py-3 text-sm font-medium',
+          'rounded-xl px-4 py-3 text-sm font-medium flex items-start gap-2',
           fbtStatus === 'full'
             ? 'bg-green-50 text-green-800 border border-green-200'
             : fbtStatus === 'partial'
@@ -44,11 +44,28 @@ export function TermComparisonTable({ results, selectedTerm, onSelectTerm }: Pro
               : 'bg-amber-50 text-amber-800 border border-amber-200',
         ].join(' ')}
       >
-        {fbtStatus === 'full'
-          ? '✓ FBT Exempt — this vehicle qualifies for the full FBT exemption. No FBT applies.'
-          : fbtStatus === 'partial'
-            ? '◑ Partial FBT Exemption (25% exempt) — 75% of the standard FBT is payable. A reduced post-tax ECM contribution is required.'
-            : '⚠ FBT applies — a post-tax ECM (Employee Contribution Method) contribution is required to eliminate FBT liability.'}
+        {fbtStatus === 'full' ? (
+          <>
+            <svg className="w-4 h-4 mt-0.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
+            </svg>
+            <span>FBT Exempt — this vehicle qualifies for the full FBT exemption. No FBT applies.</span>
+          </>
+        ) : fbtStatus === 'partial' ? (
+          <>
+            <svg className="w-4 h-4 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2V4a6 6 0 110 12z" clipRule="evenodd" />
+            </svg>
+            <span>Partial FBT Exemption (25% exempt) — 75% of the standard FBT is payable. A reduced post-tax ECM contribution is required.</span>
+          </>
+        ) : (
+          <>
+            <svg className="w-4 h-4 mt-0.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"></path>
+            </svg>
+            <span>FBT applies — a post-tax ECM (Employee Contribution Method) contribution is required to eliminate FBT liability.</span>
+          </>
+        )}
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border overflow-x-auto">
