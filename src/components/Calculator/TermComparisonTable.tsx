@@ -57,7 +57,7 @@ export function TermComparisonTable({ results, selectedTerm, onSelectTerm }: Pro
           <table className="w-full text-sm">
             <thead>
               <tr>
-                <th className="text-left py-2 pr-4 text-xs text-gray-500 font-medium w-48"></th>
+                <th className="text-left py-2 pr-4 text-xs text-gray-500 font-medium w-36 sticky left-0 bg-white z-10"></th>
                 {results.map(r => {
                   const isSelected = r.termYears === selectedTerm
                   return (
@@ -82,7 +82,7 @@ export function TermComparisonTable({ results, selectedTerm, onSelectTerm }: Pro
             <tbody>
               {ROWS.map(row => (
                 <tr key={row.label} className={['border-t', row.total ? 'border-gray-300' : 'border-gray-100'].join(' ')}>
-                  <td className={['py-2.5 pr-4 text-xs', row.total ? 'font-semibold text-gray-700' : 'text-gray-500'].join(' ')}>
+                  <td className={['py-2.5 pr-4 text-xs sticky left-0 z-10', row.total ? 'font-semibold text-gray-700 bg-white' : 'text-gray-500 bg-white'].join(' ')}>
                     {row.label}
                     {row.hint && (
                       <span className="block font-normal text-gray-400">{row.hint}</span>

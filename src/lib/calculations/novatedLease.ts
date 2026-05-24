@@ -89,6 +89,7 @@ export function calculateNovatedLease(inputs: MultiTermLeaseInputs, termYears: n
   const annualSavingVsLoan = comparisonAnnualTotal - netAnnualCost
 
   return {
+    grossSalary,
     termYears,
     interestCost: (monthlyLeasePayment * termYears * 12) + residual - vehicleCost,
     fbtExemptionStatus,

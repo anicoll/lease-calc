@@ -33,6 +33,7 @@ export interface LeaseInputs {
 export type MultiTermLeaseInputs = LeaseInputs
 
 export interface LeaseResult {
+  grossSalary: number
   termYears: number
   interestCost: number
   fbtExemptionStatus: FbtExemptionStatus

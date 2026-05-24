@@ -1,4 +1,4 @@
-import { defineConfig } from '@playwright/test'
+import { defineConfig, devices } from '@playwright/test'
 
 export default defineConfig({
   testDir: './tests',
@@ -8,6 +8,11 @@ export default defineConfig({
     baseURL: 'http://localhost:5173/lease-calc/',
     headless: true,
   },
+  projects: [
+    { name: 'desktop-chrome', use: { ...devices['Desktop Chrome'] } },
+    { name: 'mobile-chrome', use: { ...devices['Pixel 5'] } },
+    { name: 'mobile-safari', use: { ...devices['iPhone 12'] } },
+  ],
   webServer: {
     command: 'npm run dev',
     url: 'http://localhost:5173',
