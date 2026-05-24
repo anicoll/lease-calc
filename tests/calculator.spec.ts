@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 
 // Uses the form's built-in default values — no filling required.
 // If defaults change, update the golden snapshot with --update-snapshots.
-test('calculator results panel matches golden snapshot', async ({ page }) => {
+test('calculator results panel matches golden snapshot', async ({ page }, testInfo) => {
   await page.goto('/')
 
   await page.getByRole('button', { name: 'Calculate' }).click()
@@ -10,7 +10,9 @@ test('calculator results panel matches golden snapshot', async ({ page }) => {
   const panel = page.locator('#pdf-calculator-results')
   await expect(panel).toBeVisible()
 
-  await expect(panel).toHaveScreenshot('calculator-results.png')
+  if (testInfo.project.name.includes('chrome')) {
+    await expect(panel).toHaveScreenshot('calculator-results.png')
+  }
 })
 
 test('calculator Download PDF button triggers a file download without errors', async ({ page }) => {

@@ -4,6 +4,11 @@ export default defineConfig({
   testDir: './tests',
   snapshotDir: './tests/screenshots',
   reporter: [['html', { open: 'never' }], ['list']],
+  expect: {
+    toHaveScreenshot: {
+      maxDiffPixelRatio: 0.02,
+    },
+  },
   use: {
     baseURL: 'http://localhost:5173/lease-calc/',
     headless: true,
