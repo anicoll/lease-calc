@@ -19,21 +19,21 @@ export function TerminationResults({ result }: TerminationResultsProps) {
   let bannerClass: string
   let bannerMessage: string
   if (!hasEquity) {
-    bannerClass = 'bg-blue-50 text-blue-800 border border-blue-200'
+    bannerClass = 'bg-blue-50 text-blue-800 border border-blue-200 dark:bg-cyan-950/20 dark:text-cyan-400 dark:border-cyan-900/40 glow-cyan'
     bannerMessage = `Finance payout to exit the lease: ${fmt(result.financePayout)}. Enter a current market value to see your equity position.`
   } else if (underwater) {
-    bannerClass = 'bg-red-50 text-red-800 border border-red-200'
+    bannerClass = 'bg-red-50 text-red-800 border border-red-200 dark:bg-rose-950/20 dark:text-rose-400 dark:border-rose-900/40 dark:shadow-[0_0_15px_rgba(244,63,94,0.15)]'
     bannerMessage = `Your vehicle is worth less than the finance payout. You are approximately ${fmt(Math.abs(result.vehicleEquity!))} underwater.`
   } else {
-    bannerClass = 'bg-amber-50 text-amber-800 border border-amber-200'
+    bannerClass = 'bg-green-50 text-green-800 border border-green-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/40 glow-emerald'
     bannerMessage = `You have positive equity of ${fmt(result.vehicleEquity!)}. Your finance payout is ${fmt(result.financePayout)}.`
   }
 
   return (
-    <div id="pdf-termination-results" className="flex flex-col gap-4">
+    <div id="pdf-termination-results" className="flex flex-col gap-6">
       {/* Summary banner */}
-      <div className={['rounded-xl px-4 py-3 text-sm font-medium', bannerClass].join(' ')}>
-        {bannerMessage}
+      <div className={['rounded-xl px-4 py-3 text-sm font-semibold flex items-center justify-between border transition-all duration-300', bannerClass].join(' ')}>
+        <span>{bannerMessage}</span>
       </div>
 
       {/* Finance payout */}
@@ -104,7 +104,7 @@ export function TerminationResults({ result }: TerminationResultsProps) {
           hint={result.fbtExemptionStatus === 'full'
             ? 'Your vehicle qualifies for the full FBT exemption — no FBT is payable.'
             : result.fbtExemptionStatus === 'partial'
-              ? 'Your vehicle qualifies for a 25% FBT exemption. 75% of the standard FBT may be payable for the period the vehicle was used.'
+              ? 'Your vehicle qualifies for a 25% FBT exemption. 75% of standard FBT may be payable for the period the vehicle was used.'
               : 'Your vehicle does not qualify for the FBT exemption. FBT may be payable for the period the vehicle was used in this FBT year.'}
         />
         {result.fbtExemptionStatus !== 'full' && (
@@ -127,7 +127,7 @@ export function TerminationResults({ result }: TerminationResultsProps) {
 
       {/* ECM account note */}
       <SectionCard title="ECM / Running Costs Account">
-        <p className="text-sm text-gray-600">{result.ecmAccountNote}</p>
+        <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{result.ecmAccountNote}</p>
       </SectionCard>
 
       {/* Summary — only shown if market value was provided */}
@@ -176,7 +176,7 @@ export function TerminationResults({ result }: TerminationResultsProps) {
         </SectionCard>
       )}
 
-      <p className="text-xs text-gray-400 text-center px-2">
+      <p className="text-xs text-slate-400 dark:text-slate-500 text-center px-2 leading-normal">
         This calculator is indicative only and does not constitute financial or tax advice.
         Finance payout figures should be confirmed with your novated lease provider.
         FBT obligations are your employer's responsibility — consult your payroll team or a tax adviser.

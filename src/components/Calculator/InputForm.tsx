@@ -7,12 +7,14 @@ import { getSavedCalculatorInputs, saveCalculatorInputs, getPreferences } from '
 const STATES: AustralianState[] = ['NSW', 'VIC', 'QLD', 'SA', 'WA', 'TAS', 'ACT', 'NT']
 
 interface InputFormProps {
-  onCalculate: (inputs: MultiTermLeaseInputs) => void
+  onCalculate: (inputs: MultiTermLeaseInputs, rawInputs: any) => void
 }
+
 
 export function InputForm({ onCalculate }: InputFormProps) {
   const saved = getSavedCalculatorInputs()
 
+  // Base state fields
   const [grossSalary, setGrossSalary] = useState(saved?.grossSalary ?? '120000')
   const [vehicleCost, setVehicleCost] = useState(saved?.vehicleCost ?? '65000')
   const [vehicleType, setVehicleType] = useState<VehicleType>(saved?.vehicleType ?? 'BEV')
@@ -30,6 +32,7 @@ export function InputForm({ onCalculate }: InputFormProps) {
   const [managementFee, setManagementFee] = useState(saved?.managementFee ?? '13')
   const [state, setState] = useState<AustralianState>(saved?.state ?? 'SA')
 
+  // Running costs
   const [runningCostPeriod, setRunningCostPeriod] = useState<'monthly' | 'annual'>(saved?.runningCostPeriod ?? 'monthly')
   const [fuel, setFuel] = useState(saved?.fuel ?? '45')
   const [registration, setRegistration] = useState(saved?.registration ?? '70')
@@ -38,6 +41,7 @@ export function InputForm({ onCalculate }: InputFormProps) {
   const [maintenance, setMaintenance] = useState(saved?.maintenance ?? '65')
 
   const [errors, setErrors] = useState<Record<string, string>>({})
+
 
   useEffect(() => {
     if (getPreferences().autoSave) {
@@ -87,23 +91,24 @@ export function InputForm({ onCalculate }: InputFormProps) {
     maintenance,
   ])
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-
-    const newErrors: Record<string, string> = {}
+  function getCalculatedInputs(): MultiTermLeaseInputs | null {
     const salaryVal = parseFloat(grossSalary)
     const vehicleVal = parseFloat(vehicleCost)
     const residualVal = useCustomResidual && customResidual ? parseFloat(customResidual) : null
     const loanResidualVal = showLoanComparison ? parseFloat(loanComparisonResidual) || 0 : 0
 
+    const newErrors: Record<string, string> = {}
     if (!salaryVal || salaryVal <= 0) newErrors.grossSalary = 'Please enter a gross salary greater than $0.'
     if (!vehicleVal || vehicleVal <= 0) newErrors.vehicleCost = 'Please enter a vehicle price greater than $0.'
     if (residualVal !== null && residualVal > 100) newErrors.customResidual = 'Residual cannot exceed 100%.'
     if (showLoanComparison && loanResidualVal >= vehicleVal) newErrors.loanComparisonResidual = 'Balloon cannot be equal to or greater than the vehicle price.'
 
-    setErrors(newErrors)
-    if (Object.keys(newErrors).length > 0) return
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors)
+      return null
+    }
 
+    setErrors({})
     const multiplier = runningCostPeriod === 'monthly' ? 12 : 1
     const runningCosts: RunningCosts = {
       fuel: (parseFloat(fuel) || 0) * multiplier,
@@ -112,10 +117,9 @@ export function InputForm({ onCalculate }: InputFormProps) {
       tyres: (parseFloat(tyres) || 0) * multiplier,
       maintenance: (parseFloat(maintenance) || 0) * multiplier,
     }
-    const customResidualPercent =
-      useCustomResidual && customResidual ? parseFloat(customResidual) / 100 : null
+    const customResidualPercent = useCustomResidual && customResidual ? parseFloat(customResidual) / 100 : null
 
-    onCalculate({
+    return {
       grossSalary: parseFloat(grossSalary) || 0,
       vehicleCost: parseFloat(vehicleCost) || 0,
       vehicleType,
@@ -130,28 +134,75 @@ export function InputForm({ onCalculate }: InputFormProps) {
       annualManagementFee: (parseFloat(managementFee) || 0) * 12,
       runningCosts,
       state,
-    })
+    }
   }
 
-  const inputCls = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    const inputs = getCalculatedInputs()
+    if (inputs) {
+      onCalculate(inputs, {
+        grossSalary,
+        vehicleCost,
+        vehicleType,
+        phevBefore,
+        leaseStartDate,
+        grandfatheredLease,
+        interestRate,
+        showLoanComparison,
+        loanComparisonRate,
+        loanComparisonResidual,
+        useCustomResidual,
+        customResidual,
+        managementFee,
+        state,
+        runningCostPeriod,
+        fuel,
+        registration,
+        insurance,
+        tyres,
+        maintenance,
+      })
+    }
+  }
+
+
+
+  const inputCls = 'w-full rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-cyan-500'
   const selectCls = inputCls
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       <SectionCard title="Your Details">
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-4">
           <InputField label="Annual gross salary" hint="Before tax, in Australian dollars" error={errors.grossSalary}>
-            <div className="relative">
-              <span className="absolute left-3 top-2 text-gray-400 text-sm">$</span>
+            <div className="flex flex-col gap-2">
+              <div className="relative">
+                <span className="absolute left-3 top-2 text-slate-400 dark:text-slate-600 text-sm">$</span>
+                <input
+                  type="number"
+                  className={inputCls + ' pl-6'}
+                  value={grossSalary}
+                  onChange={e => setGrossSalary(e.target.value)}
+                  min="0"
+                  required
+                />
+              </div>
               <input
-                type="number"
-                className={inputCls + ' pl-6'}
-                value={grossSalary}
+                type="range"
+                min="20000"
+                max="300000"
+                step="5000"
+                value={parseFloat(grossSalary) || 20000}
                 onChange={e => setGrossSalary(e.target.value)}
-                min="0"
-               
-                required
+                className="w-full mt-1"
               />
+              <div className="flex justify-between text-[10px] text-slate-400">
+                <span>$20k</span>
+                <span>$160k</span>
+                <span>$300k+</span>
+              </div>
             </div>
           </InputField>
 
@@ -163,20 +214,35 @@ export function InputForm({ onCalculate }: InputFormProps) {
         </div>
       </SectionCard>
 
-      <SectionCard title="Vehicle">
-        <div className="flex flex-col gap-3">
+      <SectionCard title="Vehicle Details">
+        <div className="flex flex-col gap-4">
           <InputField label="Vehicle purchase price (drive-away)" hint="Total drive-away price including GST, LCT and stamp duty" error={errors.vehicleCost}>
-            <div className="relative">
-              <span className="absolute left-3 top-2 text-gray-400 text-sm">$</span>
+            <div className="flex flex-col gap-2">
+              <div className="relative">
+                <span className="absolute left-3 top-2 text-slate-400 dark:text-slate-600 text-sm">$</span>
+                <input
+                  type="number"
+                  className={inputCls + ' pl-6'}
+                  value={vehicleCost}
+                  onChange={e => setVehicleCost(e.target.value)}
+                  min="0"
+                  required
+                />
+              </div>
               <input
-                type="number"
-                className={inputCls + ' pl-6'}
-                value={vehicleCost}
+                type="range"
+                min="10000"
+                max="180000"
+                step="1000"
+                value={parseFloat(vehicleCost) || 10000}
                 onChange={e => setVehicleCost(e.target.value)}
-                min="0"
-               
-                required
+                className="w-full mt-1"
               />
+              <div className="flex justify-between text-[10px] text-slate-400">
+                <span>$10k</span>
+                <span>$95k</span>
+                <span>$180k+</span>
+              </div>
             </div>
           </InputField>
 
@@ -193,12 +259,12 @@ export function InputForm({ onCalculate }: InputFormProps) {
               label="PHEV delivery date"
               hint="PHEVs are only FBT-exempt if first held and used before 1 April 2025"
             >
-              <label className="flex items-center gap-2 text-sm">
+              <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
                 <input
                   type="checkbox"
                   checked={phevBefore}
                   onChange={e => setPhevBefore(e.target.checked)}
-                  className="rounded"
+                  className="rounded border-slate-300 dark:border-slate-800 dark:bg-slate-950"
                 />
                 Delivered before 1 April 2025
               </label>
@@ -223,12 +289,12 @@ export function InputForm({ onCalculate }: InputFormProps) {
               label="Grandfathered lease"
               hint="Leases entered into before 1 April 2027 keep full Phase 1 FBT exemption for the entire lease term, regardless of when the lease ends"
             >
-              <label className="flex items-center gap-2 text-sm">
+              <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
                 <input
                   type="checkbox"
                   checked={grandfatheredLease}
                   onChange={e => setGrandfatheredLease(e.target.checked)}
-                  className="rounded"
+                  className="rounded border-slate-300 dark:border-slate-800 dark:bg-slate-950"
                 />
                 Lease entered into before 1 April 2027 (grandfathered)
               </label>
@@ -238,20 +304,36 @@ export function InputForm({ onCalculate }: InputFormProps) {
       </SectionCard>
 
       <SectionCard title="Lease Terms">
-        <div className="flex flex-col gap-3">
-          <InputField label="Interest rate">
-            <div className="relative">
+        <div className="flex flex-col gap-4">
+          <InputField label="Interest rate" hint="Annual finance lease rate">
+            <div className="flex flex-col gap-2">
+              <div className="relative">
+                <input
+                  type="number"
+                  className={inputCls + ' pr-8'}
+                  value={interestRate}
+                  onChange={e => setInterestRate(e.target.value)}
+                  min="0"
+                  max="30"
+                  step="any"
+                  required
+                />
+                <span className="absolute right-3 top-2 text-slate-400 dark:text-slate-600 text-sm">%</span>
+              </div>
               <input
-                type="number"
-                className={inputCls + ' pr-8'}
-                value={interestRate}
+                type="range"
+                min="3.0"
+                max="18.0"
+                step="0.1"
+                value={parseFloat(interestRate) || 3.0}
                 onChange={e => setInterestRate(e.target.value)}
-                min="0"
-                max="30"
-                step="any"
-                required
+                className="w-full mt-1"
               />
-              <span className="absolute right-3 top-2 text-gray-400 text-sm">%</span>
+              <div className="flex justify-between text-[10px] text-slate-400">
+                <span>3.0%</span>
+                <span>10.5%</span>
+                <span>18.0%</span>
+              </div>
             </div>
           </InputField>
 
@@ -260,18 +342,18 @@ export function InputForm({ onCalculate }: InputFormProps) {
             hint="Leave blank to use ATO minimums (1yr: 65.63%, 2yr: 56.25%, 3yr: 46.88%, 4yr: 37.50%, 5yr: 28.13%). A custom % applies to all terms."
             error={errors.customResidual}
           >
-            <div className="flex items-center gap-2">
-              <label className="flex items-center gap-2 text-sm text-gray-600">
+            <div className="flex flex-col gap-3">
+              <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
                 <input
                   type="checkbox"
                   checked={useCustomResidual}
                   onChange={e => setUseCustomResidual(e.target.checked)}
-                  className="rounded"
+                  className="rounded border-slate-300 dark:border-slate-800 dark:bg-slate-950"
                 />
                 Use custom residual %
               </label>
               {useCustomResidual && (
-                <div className="relative flex-1">
+                <div className="relative">
                   <input
                     type="number"
                     className={inputCls + ' pr-8'}
@@ -281,7 +363,7 @@ export function InputForm({ onCalculate }: InputFormProps) {
                     min="0"
                     max="100"
                   />
-                  <span className="absolute right-3 top-2 text-gray-400 text-sm">%</span>
+                  <span className="absolute right-3 top-2 text-slate-400 dark:text-slate-600 text-sm">%</span>
                 </div>
               )}
             </div>
@@ -289,14 +371,13 @@ export function InputForm({ onCalculate }: InputFormProps) {
 
           <InputField label="Monthly management / admin fee" hint="Charged by the novated lease provider, typically $10–$30/month">
             <div className="relative">
-              <span className="absolute left-3 top-2 text-gray-400 text-sm">$</span>
+              <span className="absolute left-3 top-2 text-slate-400 dark:text-slate-600 text-sm">$</span>
               <input
                 type="number"
                 className={inputCls + ' pl-6'}
                 value={managementFee}
                 onChange={e => setManagementFee(e.target.value)}
                 min="0"
-               
               />
             </div>
           </InputField>
@@ -304,18 +385,18 @@ export function InputForm({ onCalculate }: InputFormProps) {
       </SectionCard>
 
       <SectionCard title="Running Costs">
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-1 self-start bg-gray-100 rounded-lg p-1">
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-1 self-start bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
             {(['monthly', 'annual'] as const).map(period => (
               <button
                 key={period}
                 type="button"
                 onClick={() => setRunningCostPeriod(period)}
                 className={[
-                  'px-3 py-1 rounded-md text-xs font-medium transition-colors',
+                  'px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer',
                   runningCostPeriod === period
-                    ? 'bg-white text-blue-700 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700',
+                    ? 'bg-white text-blue-600 dark:bg-slate-950 dark:text-cyan-400 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200',
                 ].join(' ')}
               >
                 {period.charAt(0).toUpperCase() + period.slice(1)}
@@ -331,7 +412,7 @@ export function InputForm({ onCalculate }: InputFormProps) {
           ].map(({ label, key, value, set }) => (
             <InputField key={key} label={label}>
               <div className="relative">
-                <span className="absolute left-3 top-2 text-gray-400 text-sm">$</span>
+                <span className="absolute left-3 top-2 text-slate-400 dark:text-slate-600 text-sm">$</span>
                 <input
                   type="number"
                   className={inputCls + ' pl-6'}
@@ -346,27 +427,27 @@ export function InputForm({ onCalculate }: InputFormProps) {
       </SectionCard>
 
       <SectionCard title="Compare with Regular Financing">
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-4">
           <label className="flex items-center gap-3 cursor-pointer">
             <div
               onClick={() => setShowLoanComparison(v => !v)}
               className={[
                 'relative w-10 h-6 rounded-full transition-colors flex-shrink-0 cursor-pointer',
-                showLoanComparison ? 'bg-blue-600' : 'bg-gray-300',
+                showLoanComparison ? 'bg-blue-600 dark:bg-cyan-500' : 'bg-slate-300 dark:bg-slate-800',
               ].join(' ')}
             >
               <span className={[
-                'absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform',
+                'absolute top-1 w-4 h-4 bg-white dark:bg-slate-900 rounded-full shadow transition-transform',
                 showLoanComparison ? 'translate-x-5' : 'translate-x-1',
               ].join(' ')} />
             </div>
-            <span className="text-sm text-gray-700">Compare against a regular car loan</span>
+            <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Compare against a regular car loan</span>
           </label>
 
           {showLoanComparison && (
-            <>
-              <p className="text-xs text-gray-500">
-                Running costs are assumed to be the same. No management fee applies to the regular loan.
+            <div className="border-t border-slate-100 dark:border-slate-800 pt-4 flex flex-col gap-4">
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-normal">
+                Running costs are assumed to be identical. Balloon values and finance parameters can be customized below.
               </p>
               <InputField label="Loan interest rate" hint="Personal / car loan rate">
                 <div className="relative">
@@ -380,13 +461,13 @@ export function InputForm({ onCalculate }: InputFormProps) {
                     step="any"
                     required
                   />
-                  <span className="absolute right-3 top-2 text-gray-400 text-sm">%</span>
+                  <span className="absolute right-3 top-2 text-slate-400 dark:text-slate-600 text-sm">%</span>
                 </div>
               </InputField>
 
               <InputField label="Balloon / residual" hint="Leave at $0 for a standard fully-amortising loan" error={errors.loanComparisonResidual}>
                 <div className="relative">
-                  <span className="absolute left-3 top-2 text-gray-400 text-sm">$</span>
+                  <span className="absolute left-3 top-2 text-slate-400 dark:text-slate-600 text-sm">$</span>
                   <input
                     type="number"
                     className={inputCls + ' pl-6'}
@@ -396,16 +477,16 @@ export function InputForm({ onCalculate }: InputFormProps) {
                   />
                 </div>
               </InputField>
-            </>
+            </div>
           )}
         </div>
       </SectionCard>
 
       <button
         type="submit"
-        className="bg-blue-700 hover:bg-blue-800 text-white font-semibold rounded-xl py-3 text-base transition-colors shadow"
+        className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-cyan-600 dark:hover:bg-cyan-700 text-white font-bold rounded-xl py-3.5 text-base transition-colors shadow-md hover:shadow-lg cursor-pointer"
       >
-        Calculate
+        Calculate Outcomes
       </button>
     </form>
   )

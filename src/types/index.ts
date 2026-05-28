@@ -117,3 +117,13 @@ export interface EarlyTerminationResult {
   ecmAccountNote: string
   totalFinancialExposure: number | null
 }
+
+export interface SavedQuote {
+  id: string
+  label: string
+  timestamp: number
+  inputs: MultiTermLeaseInputs
+  rawInputs?: any
+}
+
+

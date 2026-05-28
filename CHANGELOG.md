@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.6.0] – 2026-05-29
+
+### Added
+- **UI Dashboard Overhaul**: Integrated a fixed left sidebar navigation on desktop (with a toggle drawer menu on mobile), a 2x2 grid summary of outcome KPIs, and custom interactive SVG-based comparison line charts for lease terms.
+- **Quote Limits**: Enforced a maximum limit of 5 saved quotes, complete with inline dashboard warning messages.
+- **Quote Comparison Checklist**: Added checkbox selectors directly to the Compare Quotes page to control side-by-side table comparisons in real time.
+
+### Changed
+- Decoupled selector checkboxes and selection badges from the Saved Quotes list to focus that tab solely on loading or deleting configurations.
+
 ## [0.5.0] – 2026-05-12
 
 ### Added

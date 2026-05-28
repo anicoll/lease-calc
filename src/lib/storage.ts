@@ -1,4 +1,4 @@
-import type { AustralianState, VehicleType } from '../types'
+import type { AustralianState, VehicleType, SavedQuote } from '../types'
 
 export interface SavedCalculatorInputs {
   grossSalary: string
@@ -217,3 +217,31 @@ export function importProfileData(jsonStr: string): boolean {
     return false
   }
 }
+
+export function getThemePreference(): 'light' | 'dark' {
+  const pref = baseStorage.get('lease-calc:theme')
+  if (pref === 'light' || pref === 'dark') return pref
+  if (typeof window !== 'undefined' && window.matchMedia) {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  }
+  return 'dark' // Default to dark mode for Option A
+}
+
+export function saveThemePreference(theme: 'light' | 'dark'): void {
+  baseStorage.set('lease-calc:theme', theme)
+}
+
+export function getSavedQuotes(): SavedQuote[] {
+  const data = baseStorage.get('lease-calc:quotes')
+  if (data) {
+    try {
+      return JSON.parse(data)
+    } catch (e) {}
+  }
+  return []
+}
+
+export function saveQuotes(quotes: SavedQuote[]): void {
+  baseStorage.set('lease-calc:quotes', JSON.stringify(quotes))
+}
+
