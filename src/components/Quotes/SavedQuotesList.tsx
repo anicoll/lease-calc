@@ -2,8 +2,6 @@ import type { SavedQuote } from '../../types'
 
 interface SavedQuotesListProps {
   quotes: SavedQuote[]
-  selectedQuoteIds: string[]
-  onToggleSelect: (id: string) => void
   onLoadQuote: (quote: SavedQuote) => void
   onDeleteQuote: (id: string) => void
 }
@@ -14,8 +12,6 @@ function fmt(n: number): string {
 
 export function SavedQuotesList({
   quotes,
-  selectedQuoteIds,
-  onToggleSelect,
   onLoadQuote,
   onDeleteQuote,
 }: SavedQuotesListProps) {
@@ -53,16 +49,10 @@ export function SavedQuotesList({
             Compare different vehicles or lease parameters to see which fits your budget.
           </p>
         </div>
-        {selectedQuoteIds.length > 0 && (
-          <span className="self-start sm:self-auto text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 dark:bg-cyan-950 dark:text-cyan-300">
-            {selectedQuoteIds.length} selected for comparison
-          </span>
-        )}
       </div>
 
       <div className="grid gap-4">
         {quotes.map((quote) => {
-          const isSelected = selectedQuoteIds.includes(quote.id)
           const dateStr = new Date(quote.timestamp).toLocaleDateString('en-AU', {
             day: 'numeric',
             month: 'short',
@@ -72,29 +62,13 @@ export function SavedQuotesList({
           return (
             <div
               key={quote.id}
-              className={[
-                'glass-panel p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-l-4 transition-all duration-200',
-                isSelected
-                  ? 'border-l-blue-600 dark:border-l-cyan-500 bg-blue-50/20 dark:bg-slate-900/90'
-                  : 'border-l-transparent',
-              ].join(' ')}
+              className="glass-panel p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-l-4 border-l-slate-200 dark:border-l-slate-800 transition-all duration-200"
             >
               <div className="flex items-start gap-3">
-                <input
-                  type="checkbox"
-                  id={`chk-${quote.id}`}
-                  checked={isSelected}
-                  onChange={() => onToggleSelect(quote.id)}
-                  className="mt-1.5 h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:checked:bg-cyan-500"
-
-                />
                 <div>
-                  <label
-                    htmlFor={`chk-${quote.id}`}
-                    className="text-base font-bold text-slate-800 dark:text-slate-200 hover:cursor-pointer"
-                  >
+                  <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">
                     {quote.label}
-                  </label>
+                  </h3>
                   <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-500 dark:text-slate-400 mt-1">
                     <span>{quote.inputs.vehicleType} • {quote.inputs.state}</span>
                     <span>•</span>
@@ -144,3 +118,4 @@ export function SavedQuotesList({
     </div>
   )
 }
+

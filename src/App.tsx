@@ -482,8 +482,6 @@ export default function App() {
           ) : activeTab === 'quotes' ? (
             <SavedQuotesList
               quotes={quotes}
-              selectedQuoteIds={selectedQuoteIds}
-              onToggleSelect={handleToggleSelectQuote}
               onLoadQuote={handleLoadQuote}
               onDeleteQuote={handleDeleteQuote}
             />
