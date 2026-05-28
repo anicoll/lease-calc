@@ -85,7 +85,8 @@ export function SavedQuotesList({
                   id={`chk-${quote.id}`}
                   checked={isSelected}
                   onChange={() => onToggleSelect(quote.id)}
-                  className="mt-1.5 h-4.5 w-4.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:checked:bg-cyan-500"
+                  className="mt-1.5 h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:checked:bg-cyan-500"
+
                 />
                 <div>
                   <label

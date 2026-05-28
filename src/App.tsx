@@ -35,9 +35,13 @@ export default function App() {
   // Mobile sidebar drawer state
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
-  // Calculation states
+  // Calculation workflow states
   const [leaseResults, setLeaseResults] = useState<LeaseResult[] | null>(null)
+  const [currentInputs, setCurrentInputs] = useState<MultiTermLeaseInputs | null>(null)
+  const [currentRawInputs, setCurrentRawInputs] = useState<any | null>(null)
+  const [isEditing, setIsEditing] = useState(false)
   const [selectedTerm, setSelectedTerm] = useState<number | null>(null)
+  
   const [analyserResult, setAnalyserResult] = useState<AnalyserResult | null>(null)
   const [terminationResult, setTerminationResult] = useState<EarlyTerminationResult | null>(null)
 
@@ -47,6 +51,10 @@ export default function App() {
   // Saved quotes state
   const [quotes, setQuotes] = useState<SavedQuote[]>(() => getSavedQuotes())
   const [selectedQuoteIds, setSelectedQuoteIds] = useState<string[]>([])
+  
+  // Quote label states for saving from results dashboard
+  const [quoteLabel, setQuoteLabel] = useState('')
+  const [saveSuccess, setSaveSuccess] = useState(false)
 
   // Apply theme class to document
   useEffect(() => {
@@ -58,15 +66,26 @@ export default function App() {
     }
   }, [theme])
 
+  // Update default quote label when inputs change
+  useEffect(() => {
+    if (currentInputs) {
+      const formattedCost = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', maximumFractionDigits: 0 }).format(currentInputs.vehicleCost || 0)
+      setQuoteLabel(`${currentInputs.vehicleType === 'BEV' ? 'Tesla/EV' : currentInputs.vehicleType === 'PHEV' ? 'PHEV' : 'ICE'} (${formattedCost})`)
+    }
+  }, [currentInputs])
+
   function handleToggleTheme() {
     const nextTheme = theme === 'dark' ? 'light' : 'dark'
     setTheme(nextTheme)
     saveThemePreference(nextTheme)
   }
 
-  function handleCalculate(inputs: MultiTermLeaseInputs) {
+  function handleCalculate(inputs: MultiTermLeaseInputs, rawInputs: any) {
     setLeaseResults(calculateAllLeaseTerms(inputs))
+    setCurrentInputs(inputs)
+    setCurrentRawInputs(rawInputs)
     setSelectedTerm(3) // default to 3 years detail view
+    setIsEditing(false) // Show results directly, hide input form
   }
 
   function handleAnalyse(inputs: AnalyserInputs) {
@@ -80,9 +99,12 @@ export default function App() {
   function handleReset() {
     setResetKey(prev => prev + 1)
     setLeaseResults(null)
+    setCurrentInputs(null)
+    setCurrentRawInputs(null)
     setSelectedTerm(null)
     setAnalyserResult(null)
     setTerminationResult(null)
+    setIsEditing(false)
   }
 
   // Quote actions
@@ -99,6 +121,14 @@ export default function App() {
     saveQuotes(updatedQuotes)
   }
 
+  function handleSaveCurrentQuote() {
+    if (currentInputs) {
+      handleSaveQuote(currentInputs, quoteLabel.trim() || 'Lease Quote', currentRawInputs)
+      setSaveSuccess(true)
+      setTimeout(() => setSaveSuccess(false), 3000)
+    }
+  }
+
   function handleDeleteQuote(id: string) {
     const updatedQuotes = quotes.filter(q => q.id !== id)
     setQuotes(updatedQuotes)
@@ -111,7 +141,10 @@ export default function App() {
       saveCalculatorInputs(quote.rawInputs)
       setResetKey(prev => prev + 1)
       setLeaseResults(calculateAllLeaseTerms(quote.inputs))
+      setCurrentInputs(quote.inputs)
+      setCurrentRawInputs(quote.rawInputs)
       setSelectedTerm(3)
+      setIsEditing(false) // Show results
       setActiveTab('calculator')
       saveActiveTab('calculator')
     }
@@ -165,10 +198,10 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-300 flex flex-col lg:flex-row">
+    <div className="h-screen w-screen overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-300 flex flex-col lg:flex-row">
       
       {/* Mobile Top Header */}
-      <header className="lg:hidden bg-slate-900 border-b border-slate-800 text-white dark:bg-slate-950 dark:border-slate-900 px-4 py-3 flex items-center justify-between z-40 sticky top-0">
+      <header className="lg:hidden bg-slate-900 border-b border-slate-800 text-white dark:bg-slate-950 dark:border-slate-900 px-4 py-3 flex items-center justify-between z-40 sticky top-0 flex-shrink-0">
         <button
           onClick={() => setIsSidebarOpen(true)}
           className="p-1 rounded text-slate-400 hover:text-white focus:outline-none cursor-pointer"
@@ -204,7 +237,7 @@ export default function App() {
       {/* Navigation Sidebar (Desktop fixed, Mobile overlay drawer) */}
       <aside
         className={[
-          'w-64 flex flex-col bg-slate-900 border-r border-slate-800 text-white dark:bg-slate-950 dark:border-slate-900 transition-transform duration-300 lg:translate-x-0 lg:static fixed inset-y-0 left-0 z-50',
+          'w-64 h-full flex flex-col bg-slate-900 border-r border-slate-800 text-white dark:bg-slate-950 dark:border-slate-900 transition-transform duration-300 lg:translate-x-0 lg:static fixed inset-y-0 left-0 z-50 flex-shrink-0',
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         ].join(' ')}
       >
@@ -289,14 +322,14 @@ export default function App() {
           >
             {theme === 'dark' ? (
               <>
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m12.728 12.728l.707.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
                 </svg>
                 <span>Light Mode</span>
               </>
             ) : (
               <>
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                 </svg>
                 <span>Dark Mode</span>
@@ -308,7 +341,7 @@ export default function App() {
             onClick={() => setShowSettings(true)}
             className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-semibold rounded-lg hover:bg-slate-800 dark:hover:bg-slate-900/60 text-slate-300 hover:text-white transition-colors cursor-pointer"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-slate-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
               <circle cx="12" cy="7" r="4" />
             </svg>
@@ -319,7 +352,7 @@ export default function App() {
             onClick={() => setShowChangelog(true)}
             className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-semibold rounded-lg hover:bg-slate-800 dark:hover:bg-slate-900/60 text-slate-300 hover:text-white transition-colors cursor-pointer"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-slate-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10" />
               <polyline points="12 6 12 12 16 14" />
             </svg>
@@ -336,60 +369,96 @@ export default function App() {
         />
       )}
 
-      {/* Main Workspace Area */}
-      <div className="flex-1 flex flex-col min-w-0 transition-colors duration-300">
+      {/* Main Workspace Area (Only this scrolls) */}
+      <div className="flex-1 h-full overflow-y-auto flex flex-col min-w-0 transition-colors duration-300">
         <main className="flex-1 w-full max-w-6xl mx-auto px-4 py-8 md:px-8">
           
           {/* Header Title for Current Workspace view */}
-          <div className="mb-6 flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-black tracking-tight text-slate-800 dark:text-slate-100 uppercase">
-                {activeTab === 'calculator' ? 'Lease Outcomes Dashboard' : TAB_LABELS[activeTab]}
-              </h1>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                {activeTab === 'calculator'
-                  ? 'Configure parameters, review 1–5 yr term savings trends, and analyze calculations.'
-                  : `Manage settings and verify data for the ${TAB_LABELS[activeTab].toLowerCase()} scenario.`}
-              </p>
-            </div>
-            
-            {activeTab === 'calculator' && leaseResults && (
-              <button
-                onClick={handleReset}
-                className="px-3.5 py-1.5 text-xs font-bold rounded-lg border border-slate-200 hover:border-slate-300 text-slate-600 dark:border-slate-800 dark:hover:border-slate-700 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/40 cursor-pointer transition-colors"
-              >
-                Reset Calculator
-              </button>
-            )}
+          <div className="mb-6">
+            <h1 className="text-2xl font-black tracking-tight text-slate-800 dark:text-slate-100 uppercase">
+              {activeTab === 'calculator' ? 'Lease Outcomes Dashboard' : TAB_LABELS[activeTab]}
+            </h1>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              {activeTab === 'calculator'
+                ? 'Configure parameters, review 1–5 yr term savings trends, and analyze calculations.'
+                : `Manage settings and verify data for the ${TAB_LABELS[activeTab].toLowerCase()} scenario.`}
+            </p>
           </div>
 
           {activeTab === 'calculator' ? (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-              {/* Left Column: Form inputs */}
-              <div className={leaseResults ? 'lg:col-span-5' : 'max-w-2xl mx-auto lg:col-span-12 w-full'}>
-                <InputForm
-                  key={`calculator-${resetKey}`}
-                  onCalculate={handleCalculate}
-                  onSaveQuote={handleSaveQuote}
-                />
-              </div>
+            <div className="w-full">
+              {/* Calculator View Workflow:
+                  If no results yet or user clicked "Edit Parameters" -> Show configuration form centered.
+                  If results are generated and user is not editing -> Show outcomes dashboard. */}
+              {!leaseResults || isEditing ? (
+                <div className="max-w-2xl mx-auto w-full">
+                  <InputForm
+                    key={`calculator-${resetKey}`}
+                    onCalculate={handleCalculate}
+                  />
+                </div>
+              ) : (
+                <div className="max-w-4xl mx-auto flex flex-col gap-6 w-full animate-fade-in">
+                  
+                  {/* Results Action Bar (Edit Parameters, Reset, and Save Quote) */}
+                  <div className="glass-panel p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-2.5 w-full sm:w-auto">
+                      <button
+                        onClick={() => setIsEditing(true)}
+                        className="px-4 py-2 text-xs font-bold rounded-lg bg-blue-600 hover:bg-blue-700 dark:bg-cyan-600 dark:hover:bg-cyan-700 text-white transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                        Edit Parameters
+                      </button>
+                      <button
+                        onClick={handleReset}
+                        className="px-4 py-2 text-xs font-bold rounded-lg border border-slate-200 hover:border-slate-300 text-slate-600 dark:border-slate-800 dark:hover:border-slate-700 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors cursor-pointer"
+                      >
+                        Reset
+                      </button>
+                    </div>
 
-              {/* Right Column: Outcomes Comparison & Detailed breakdown */}
-              {leaseResults && (
-                <div id="pdf-calculator-results" className="lg:col-span-7 flex flex-col gap-6 w-full">
-                  {/* Dynamic SVG comparison line chart */}
+                    {/* Quote Saving Segment */}
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                      <input
+                        type="text"
+                        placeholder="Quote label (e.g. Model Y)"
+                        value={quoteLabel}
+                        onChange={(e) => setQuoteLabel(e.target.value)}
+                        className="flex-1 sm:w-48 rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleSaveCurrentQuote}
+                        className={[
+                          'px-4 py-1.5 rounded-lg font-bold text-xs shadow-sm transition-colors cursor-pointer whitespace-nowrap',
+                          saveSuccess
+                            ? 'bg-green-600 hover:bg-green-700 text-white'
+                            : 'bg-slate-800 hover:bg-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-200',
+                        ].join(' ')}
+                      >
+                        {saveSuccess ? 'Saved! ✓' : 'Save Quote'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* SVG Line Chart (1-5 Yr comparisons) */}
                   <DashboardChart
                     results={leaseResults}
                     selectedTerm={selectedTerm}
                     onSelectTerm={setSelectedTerm}
                   />
-                  {/* Side-by-side comparison table */}
+
+                  {/* Summary grid table */}
                   <TermComparisonTable
                     results={leaseResults}
                     selectedTerm={selectedTerm}
                     onSelectTerm={setSelectedTerm}
                   />
-                  {/* 2x2 grid results summary */}
+
+                  {/* Detailed 2x2 Outcome KPIs and metrics panel */}
                   {selectedTerm !== null && (
                     <ResultsPanel result={leaseResults.find(r => r.termYears === selectedTerm)!} />
                   )}
@@ -434,7 +503,7 @@ export default function App() {
           )}
         </main>
 
-        <footer className="text-center text-xs text-slate-400 dark:text-slate-500 py-6 border-t border-slate-200 dark:border-slate-900 bg-white dark:bg-slate-950 transition-colors duration-300 space-y-1">
+        <footer className="text-center text-xs text-slate-400 dark:text-slate-500 py-6 border-t border-slate-200 dark:border-slate-900 bg-white dark:bg-slate-950 transition-colors duration-300 space-y-1 flex-shrink-0">
           <p className="max-w-2xl mx-auto px-4">
             This calculator is for educational purposes only and does not constitute financial or tax advice.
             Tax rates and thresholds are based on ATO 2024–25 figures and are subject to change.

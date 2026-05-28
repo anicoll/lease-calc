@@ -134,9 +134,10 @@ export function ResultsPanel({ result }: ResultsPanelProps) {
             <div
               key={idx}
               className={[
-                'glass-panel p-4.5 flex flex-col justify-between relative border',
+                'glass-panel p-5 flex flex-col justify-between relative border',
                 kpi.glowClass
               ].join(' ')}
+
             >
               <div>
                 <span className="text-xs font-bold text-slate-400 dark:text-slate-500 block uppercase tracking-wider">

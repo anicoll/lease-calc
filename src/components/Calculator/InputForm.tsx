@@ -7,12 +7,11 @@ import { getSavedCalculatorInputs, saveCalculatorInputs, getPreferences } from '
 const STATES: AustralianState[] = ['NSW', 'VIC', 'QLD', 'SA', 'WA', 'TAS', 'ACT', 'NT']
 
 interface InputFormProps {
-  onCalculate: (inputs: MultiTermLeaseInputs) => void
-  onSaveQuote?: (inputs: MultiTermLeaseInputs, label: string, rawInputs: any) => void
+  onCalculate: (inputs: MultiTermLeaseInputs, rawInputs: any) => void
 }
 
 
-export function InputForm({ onCalculate, onSaveQuote }: InputFormProps) {
+export function InputForm({ onCalculate }: InputFormProps) {
   const saved = getSavedCalculatorInputs()
 
   // Base state fields
@@ -41,16 +40,8 @@ export function InputForm({ onCalculate, onSaveQuote }: InputFormProps) {
   const [tyres, setTyres] = useState(saved?.tyres ?? '50')
   const [maintenance, setMaintenance] = useState(saved?.maintenance ?? '65')
 
-  // Label for saving quote
-  const [quoteLabel, setQuoteLabel] = useState('')
-  const [saveSuccess, setSaveSuccess] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
-  // Update quote label based on inputs if not customized
-  useEffect(() => {
-    const formattedCost = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', maximumFractionDigits: 0 }).format(parseFloat(vehicleCost) || 0)
-    setQuoteLabel(`${vehicleType === 'BEV' ? 'Tesla/EV' : vehicleType === 'PHEV' ? 'PHEV' : 'ICE'} (${formattedCost})`)
-  }, [vehicleCost, vehicleType])
 
   useEffect(() => {
     if (getPreferences().autoSave) {
@@ -151,14 +142,7 @@ export function InputForm({ onCalculate, onSaveQuote }: InputFormProps) {
     e.preventDefault()
     const inputs = getCalculatedInputs()
     if (inputs) {
-      onCalculate(inputs)
-    }
-  }
-
-  function handleSaveQuote() {
-    const inputs = getCalculatedInputs()
-    if (inputs && onSaveQuote) {
-      onSaveQuote(inputs, quoteLabel.trim() || 'Lease Quote', {
+      onCalculate(inputs, {
         grossSalary,
         vehicleCost,
         vehicleType,
@@ -180,10 +164,9 @@ export function InputForm({ onCalculate, onSaveQuote }: InputFormProps) {
         tyres,
         maintenance,
       })
-      setSaveSuccess(true)
-      setTimeout(() => setSaveSuccess(false), 3000)
     }
   }
+
 
 
   const inputCls = 'w-full rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-cyan-500'
@@ -499,38 +482,12 @@ export function InputForm({ onCalculate, onSaveQuote }: InputFormProps) {
         </div>
       </SectionCard>
 
-      <div className="flex flex-col sm:flex-row gap-3">
-        <button
-          type="submit"
-          className="flex-1 bg-blue-600 hover:bg-blue-700 dark:bg-cyan-600 dark:hover:bg-cyan-700 text-white font-bold rounded-xl py-3.5 text-base transition-colors shadow-md hover:shadow-lg cursor-pointer"
-        >
-          Calculate Outcomes
-        </button>
-
-        {onSaveQuote && (
-          <div className="flex-1 flex gap-2">
-            <input
-              type="text"
-              placeholder="Quote label (e.g. Model Y)"
-              value={quoteLabel}
-              onChange={(e) => setQuoteLabel(e.target.value)}
-              className="flex-1 rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <button
-              type="button"
-              onClick={handleSaveQuote}
-              className={[
-                'px-4 rounded-xl font-bold text-sm shadow-md transition-colors cursor-pointer whitespace-nowrap',
-                saveSuccess
-                  ? 'bg-green-600 hover:bg-green-700 text-white'
-                  : 'bg-slate-800 hover:bg-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-200',
-              ].join(' ')}
-            >
-              {saveSuccess ? 'Saved! ✓' : 'Save to Quotes'}
-            </button>
-          </div>
-        )}
-      </div>
+      <button
+        type="submit"
+        className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-cyan-600 dark:hover:bg-cyan-700 text-white font-bold rounded-xl py-3.5 text-base transition-colors shadow-md hover:shadow-lg cursor-pointer"
+      >
+        Calculate Outcomes
+      </button>
     </form>
   )
 }
