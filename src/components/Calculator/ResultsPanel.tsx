@@ -25,6 +25,40 @@ export function ResultsPanel({ result }: ResultsPanelProps) {
 
   const perPeriod = (annual: number) => fmt(annual / divisor)
 
+  // Calculations for KPIs
+  const divisorFactor = period === 'monthly' ? 12 : 26
+  const takeHomeVal = (result.newTaxableIncome - result.taxAfterSacrifice - result.annualPostTaxDeduction) / divisorFactor
+  const leasePayVal = result.annualLeasePayment / divisorFactor
+  const taxSavingsVal = result.annualTaxSaving / divisorFactor
+  const outOfPocketVal = result.netAnnualCost / divisorFactor
+
+  const kpis = [
+    {
+      label: `${period === 'monthly' ? 'Monthly' : 'Fortnightly'} Net Take Home`,
+      value: fmt(takeHomeVal),
+      hint: 'Your net income in hand per pay period after all salary sacrifices, ECM contributions, and income tax.',
+      glowClass: 'glow-cyan border-cyan-500/10 text-slate-800 dark:text-cyan-400'
+    },
+    {
+      label: `${period === 'monthly' ? 'Monthly' : 'Fortnightly'} Lease Payment`,
+      value: fmt(leasePayVal),
+      hint: 'The finance repayment portion of the lease paid out of pre-tax income.',
+      glowClass: 'dark:border-slate-800 dark:text-slate-200 text-slate-800'
+    },
+    {
+      label: `${period === 'monthly' ? 'Monthly' : 'Fortnightly'} Tax Savings`,
+      value: fmt(taxSavingsVal),
+      hint: 'The income tax and Medicare levy saved through salary sacrifice.',
+      glowClass: 'glow-emerald border-emerald-500/10 text-green-600 dark:text-emerald-400'
+    },
+    {
+      label: `${period === 'monthly' ? 'Monthly' : 'Fortnightly'} Out-of-Pocket`,
+      value: fmt(outOfPocketVal),
+      hint: 'The true effective out-of-pocket cost per period (lease + running costs + management fee minus tax savings).',
+      glowClass: 'glow-indigo border-indigo-500/10 text-indigo-600 dark:text-indigo-400'
+    }
+  ]
+
   return (
     <div className="flex flex-col gap-6">
       {/* FBT Status Banner */}
@@ -72,10 +106,10 @@ export function ResultsPanel({ result }: ResultsPanelProps) {
         </div>
       )}
 
-      {/* Payment period summary */}
-      <SectionCard title="Payment Summary">
-        <div className="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-slate-800 pb-3">
-          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Show payments as</span>
+      {/* KPI Cards Grid */}
+      <div className="flex flex-col gap-3">
+        <div className="flex justify-between items-center px-1">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Key Outcomes ({periodLabel})</span>
           <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
             {(['monthly', 'fortnightly'] as PayPeriod[]).map(p => (
               <button
@@ -83,7 +117,7 @@ export function ResultsPanel({ result }: ResultsPanelProps) {
                 type="button"
                 onClick={() => setPeriod(p)}
                 className={[
-                  'px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer',
+                  'px-2.5 py-0.5 rounded-md text-[10px] sm:text-xs font-semibold transition-all cursor-pointer',
                   period === p
                     ? 'bg-white text-blue-600 dark:bg-slate-950 dark:text-cyan-400 shadow-sm'
                     : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200',
@@ -95,42 +129,30 @@ export function ResultsPanel({ result }: ResultsPanelProps) {
           </div>
         </div>
 
-        <ResultRow
-          label={`Pre-tax salary sacrifice (${periodLabel})`}
-          value={perPeriod(result.annualPreTaxDeduction)}
-          hint="Deducted from gross salary before income tax is calculated"
-        />
-        {result.fbtExemptionStatus !== 'full' && (
-          <ResultRow
-            label={`Post-tax ECM contribution (${periodLabel})`}
-            value={perPeriod(result.annualPostTaxDeduction)}
-            negative
-            hint={result.fbtExemptionStatus === 'partial'
-              ? 'Reduced after-tax ECM contribution covering the 75% FBT-exposed portion (Employee Contribution Method)'
-              : 'Required after-tax contribution to eliminate FBT (Employee Contribution Method)'}
-          />
-        )}
-        <ResultRow
-          label={`Effective out-of-pocket (${periodLabel})`}
-          value={perPeriod(result.netAnnualCost)}
-          highlight
-          hint="Net out-of-pocket cost after income tax savings"
-        />
-
-        <div className="border-t border-slate-100 dark:border-slate-800 mt-4 pt-4">
-          <div className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Estimated Take-home Pay</div>
-          <ResultRow
-            label={`Before lease (${periodLabel})`}
-            value={perPeriod(result.grossSalary - result.taxBeforeSacrifice)}
-            hint="Estimated net take-home pay before the lease (gross salary minus income tax)"
-          />
-          <ResultRow
-            label={`After lease (${periodLabel})`}
-            value={perPeriod(result.newTaxableIncome - result.taxAfterSacrifice - result.annualPostTaxDeduction)}
-            hint="Estimated net take-home pay after lease deductions, running costs, and tax savings"
-          />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {kpis.map((kpi, idx) => (
+            <div
+              key={idx}
+              className={[
+                'glass-panel p-4.5 flex flex-col justify-between relative border',
+                kpi.glowClass
+              ].join(' ')}
+            >
+              <div>
+                <span className="text-xs font-bold text-slate-400 dark:text-slate-500 block uppercase tracking-wider">
+                  {kpi.label}
+                </span>
+                <span className="text-2xl sm:text-3xl font-extrabold block mt-2 tracking-tight">
+                  {kpi.value}
+                </span>
+              </div>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-2.5 leading-normal">
+                {kpi.hint}
+              </p>
+            </div>
+          ))}
         </div>
-      </SectionCard>
+      </div>
 
       {/* Annual Summary */}
       <SectionCard title="Annual Breakdown">
