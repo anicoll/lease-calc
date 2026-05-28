@@ -26,16 +26,16 @@ export function ResultsPanel({ result }: ResultsPanelProps) {
   const perPeriod = (annual: number) => fmt(annual / divisor)
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       {/* FBT Status Banner */}
       <div
         className={[
-          'rounded-xl px-4 py-3 text-sm font-medium flex items-start gap-2',
+          'rounded-xl px-4 py-3 text-sm font-semibold flex items-start gap-2.5 transition-all duration-300',
           result.fbtExemptionStatus === 'full'
-            ? 'bg-green-50 text-green-800 border border-green-200'
+            ? 'bg-green-50 text-green-800 border border-green-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/40 glow-emerald'
             : result.fbtExemptionStatus === 'partial'
-              ? 'bg-blue-50 text-blue-800 border border-blue-200'
-              : 'bg-amber-50 text-amber-800 border border-amber-200',
+              ? 'bg-blue-50 text-blue-800 border border-blue-200 dark:bg-cyan-950/20 dark:text-cyan-400 dark:border-cyan-900/40 glow-cyan'
+              : 'bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/40 glow-indigo',
         ].join(' ')}
       >
         {result.fbtExemptionStatus === 'full' ? (
@@ -50,7 +50,7 @@ export function ResultsPanel({ result }: ResultsPanelProps) {
             <svg className="w-4 h-4 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2V4a6 6 0 110 12z" clipRule="evenodd" />
             </svg>
-            <span>Partial FBT Exemption (25% exempt) — 75% of the standard FBT is payable. A reduced post-tax ECM contribution is required.</span>
+            <span>Partial FBT Exemption (25% exempt) — 75% of standard FBT is payable. A reduced ECM post-tax contribution is required.</span>
           </>
         ) : (
           <>
@@ -64,8 +64,8 @@ export function ResultsPanel({ result }: ResultsPanelProps) {
 
       {/* FBT phase-crossing warning */}
       {result.fbtPhaseWarning && (
-        <div className="rounded-xl px-4 py-3 text-sm bg-yellow-50 text-yellow-800 border border-yellow-200 flex items-start gap-2">
-          <svg className="w-4 h-4 mt-0.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <div className="rounded-xl px-4 py-3 text-sm bg-yellow-50 text-yellow-800 border border-yellow-200 dark:bg-yellow-950/20 dark:text-yellow-400 dark:border-yellow-900/50 flex items-start gap-2.5">
+          <svg className="w-4 h-4 mt-0.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"></path>
           </svg>
           <span>{result.fbtPhaseWarning}</span>
@@ -74,19 +74,19 @@ export function ResultsPanel({ result }: ResultsPanelProps) {
 
       {/* Payment period summary */}
       <SectionCard title="Payment Summary">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-xs text-gray-500">Show payments as</span>
-          <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+        <div className="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-slate-800 pb-3">
+          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Show payments as</span>
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
             {(['monthly', 'fortnightly'] as PayPeriod[]).map(p => (
               <button
                 key={p}
                 type="button"
                 onClick={() => setPeriod(p)}
                 className={[
-                  'px-3 py-1 rounded-md text-xs font-medium transition-colors',
+                  'px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer',
                   period === p
-                    ? 'bg-white text-blue-700 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700',
+                    ? 'bg-white text-blue-600 dark:bg-slate-950 dark:text-cyan-400 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200',
                 ].join(' ')}
               >
                 {p.charAt(0).toUpperCase() + p.slice(1)}
@@ -114,11 +114,11 @@ export function ResultsPanel({ result }: ResultsPanelProps) {
           label={`Effective out-of-pocket (${periodLabel})`}
           value={perPeriod(result.netAnnualCost)}
           highlight
-          hint="Net cost after income tax savings"
+          hint="Net out-of-pocket cost after income tax savings"
         />
 
-        <div className="border-t border-gray-100 mt-3 pt-3">
-          <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Estimated Take-home Pay</div>
+        <div className="border-t border-slate-100 dark:border-slate-800 mt-4 pt-4">
+          <div className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Estimated Take-home Pay</div>
           <ResultRow
             label={`Before lease (${periodLabel})`}
             value={perPeriod(result.grossSalary - result.taxBeforeSacrifice)}
@@ -182,7 +182,7 @@ export function ResultsPanel({ result }: ResultsPanelProps) {
       {/* Regular loan comparison */}
       {result.showLoanComparison && (
         <SectionCard title="vs. Regular Car Loan">
-          <p className="text-xs text-gray-500 mb-3">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 leading-normal">
             Comparing your novated lease against a standard car loan at {(result.loanComparisonRate * 100).toFixed(2)}% p.a.
             Running costs are the same in both scenarios; no management fee applies to the loan.
           </p>
@@ -201,7 +201,7 @@ export function ResultsPanel({ result }: ResultsPanelProps) {
             value={perPeriod(result.comparisonAnnualTotal)}
             highlight
           />
-          <div className="border-t border-gray-100 mt-2 pt-2">
+          <div className="border-t border-slate-100 dark:border-slate-800 mt-3 pt-3">
             <ResultRow
               label={`Novated lease out-of-pocket (${periodLabel})`}
               value={perPeriod(result.netAnnualCost)}
@@ -222,7 +222,7 @@ export function ResultsPanel({ result }: ResultsPanelProps) {
       {/* LCT / Stamp Duty breakdown */}
       {(result.lctApplied > 0 || result.stampDutyApplied > 0) && (
         <SectionCard title="Estimated costs included in drive-away price">
-          <p className="text-xs text-gray-500 mb-2">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mb-3 leading-normal">
             These charges are already part of the drive-away price you entered and are financed within the lease.
           </p>
           {result.lctApplied > 0 && (
@@ -239,15 +239,15 @@ export function ResultsPanel({ result }: ResultsPanelProps) {
               hint="State government duty applied to the vehicle purchase price. Rates are approximate — verify with your state revenue office."
             />
           )}
-          <p className="text-xs text-gray-400 mt-2">
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-2">
             * Stamp duty rates are approximate and subject to change.
           </p>
-          <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-2 flex items-start gap-2">
-            <svg className="w-3.5 h-3.5 mt-0.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 dark:bg-amber-950/20 dark:text-amber-300 dark:border-amber-900/50 rounded-lg px-3 py-2 mt-3 flex items-start gap-2.5 leading-normal">
+            <svg className="w-3.5 h-3.5 mt-0.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"></path>
             </svg>
             <span>
-              Stamp duty is calculated on your drive-away price, which already includes stamp duty itself plus other fees such as CTP insurance, registration, and plate fees. This means the estimate above will be slightly higher than the actual amount — for an accurate figure, use the vehicle's pre-registration price or check with your dealer.
+              Stamp duty is estimated on your drive-away price, which already includes stamp duty itself. For a precise calculation, verify the pre-tax vehicle price with your provider.
             </span>
           </div>
         </SectionCard>

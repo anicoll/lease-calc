@@ -67,7 +67,7 @@ export function TerminationForm({ onCalculate }: TerminationFormProps) {
     terminationDate,
   ])
 
-  const inputCls = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+  const inputCls = 'w-full rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-cyan-500'
 
   const termMonths = parseInt(originalTermMonths) || 60
   const termYears = Math.max(1, Math.min(5, Math.round(termMonths / 12)))
@@ -115,18 +115,18 @@ export function TerminationForm({ onCalculate }: TerminationFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-sm text-blue-800">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+      <div className="bg-blue-50 border border-blue-200 dark:bg-cyan-950/20 dark:border-cyan-900/40 dark:text-cyan-400 rounded-xl px-4 py-3 text-sm text-blue-800 glow-cyan leading-relaxed">
         Calculate what it costs to exit a novated lease early — whether due to redundancy, change of employer,
         or personal choice. Enter your lease details to see the finance payout, vehicle equity position,
         and any FBT owing for the period the vehicle was used.
       </div>
 
       <SectionCard title="Your Vehicle">
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-4">
           <InputField label="Vehicle base value" hint="Original financed amount (excluding LCT and stamp duty)">
             <div className="relative">
-              <span className="absolute left-3 top-2 text-gray-400 text-sm">$</span>
+              <span className="absolute left-3 top-2 text-slate-400 dark:text-slate-600 text-sm">$</span>
               <input
                 type="number"
                 className={inputCls + ' pl-6'}
@@ -146,10 +146,10 @@ export function TerminationForm({ onCalculate }: TerminationFormProps) {
                   type="button"
                   onClick={() => setVehicleType(type)}
                   className={[
-                    'flex-1 py-2 rounded-lg text-sm font-medium border transition-colors',
+                    'flex-1 py-2 rounded-lg text-sm font-semibold border transition-all cursor-pointer',
                     vehicleType === type
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400',
+                      ? 'bg-blue-600 text-white border-blue-600 dark:bg-cyan-600 dark:border-cyan-600'
+                      : 'bg-white text-slate-600 border-slate-200 hover:border-blue-500 dark:bg-slate-900 dark:text-slate-300 dark:border-slate-800 dark:hover:border-cyan-500',
                   ].join(' ')}
                 >
                   {type}
@@ -159,10 +159,10 @@ export function TerminationForm({ onCalculate }: TerminationFormProps) {
           </InputField>
 
           {vehicleType === 'PHEV' && (
-            <label className="flex items-start gap-2 text-sm text-gray-700 cursor-pointer">
+            <label className="flex items-start gap-2.5 text-sm text-slate-700 dark:text-slate-300 cursor-pointer">
               <input
                 type="checkbox"
-                className="mt-0.5"
+                className="mt-1 rounded border-slate-300 dark:border-slate-800 dark:bg-slate-950"
                 checked={phevBefore}
                 onChange={e => setPhevBefore(e.target.checked)}
               />
@@ -171,10 +171,10 @@ export function TerminationForm({ onCalculate }: TerminationFormProps) {
           )}
 
           {vehicleType === 'BEV' && (
-            <label className="flex items-start gap-2 text-sm text-gray-700 cursor-pointer">
+            <label className="flex items-start gap-2.5 text-sm text-slate-700 dark:text-slate-300 cursor-pointer">
               <input
                 type="checkbox"
-                className="mt-0.5"
+                className="mt-1 rounded border-slate-300 dark:border-slate-800 dark:bg-slate-950"
                 checked={grandfatheredLease}
                 onChange={e => setGrandfatheredLease(e.target.checked)}
               />
@@ -185,7 +185,7 @@ export function TerminationForm({ onCalculate }: TerminationFormProps) {
       </SectionCard>
 
       <SectionCard title="Lease Terms">
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-4">
           <InputField label="Original lease term" hint="Total term agreed when the lease started">
             <div className="relative">
               <input
@@ -197,7 +197,7 @@ export function TerminationForm({ onCalculate }: TerminationFormProps) {
                 max="60"
                 required
               />
-              <span className="absolute right-3 top-2 text-gray-400 text-sm">months</span>
+              <span className="absolute right-3 top-2 text-slate-400 dark:text-slate-600 text-sm">months</span>
             </div>
           </InputField>
 
@@ -215,7 +215,7 @@ export function TerminationForm({ onCalculate }: TerminationFormProps) {
                 min="0"
                 required
               />
-              <span className="absolute right-3 top-2 text-gray-400 text-sm">months</span>
+              <span className="absolute right-3 top-2 text-slate-400 dark:text-slate-600 text-sm">months</span>
             </div>
           </InputField>
 
@@ -231,7 +231,7 @@ export function TerminationForm({ onCalculate }: TerminationFormProps) {
                 step="any"
                 required
               />
-              <span className="absolute right-3 top-2 text-gray-400 text-sm">%</span>
+              <span className="absolute right-3 top-2 text-slate-400 dark:text-slate-600 text-sm">%</span>
             </div>
           </InputField>
 
@@ -240,12 +240,13 @@ export function TerminationForm({ onCalculate }: TerminationFormProps) {
             hint={`ATO minimum for ${termYears}-year term: ${(atoResidualPct * 100).toFixed(2)}% = ${new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', maximumFractionDigits: 0 }).format(defaultResidual)}`}
             error={errors.customResidualPct}
           >
-            <div className="flex flex-col gap-2">
-              <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+            <div className="flex flex-col gap-2.5">
+              <label className="flex items-center gap-2.5 text-sm text-slate-600 dark:text-slate-400 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={useCustomResidual}
                   onChange={e => setUseCustomResidual(e.target.checked)}
+                  className="rounded border-slate-300 dark:border-slate-800 dark:bg-slate-950"
                 />
                 Use a custom residual percentage
               </label>
@@ -261,7 +262,7 @@ export function TerminationForm({ onCalculate }: TerminationFormProps) {
                     max="100"
                     step="any"
                   />
-                  <span className="absolute right-3 top-2 text-gray-400 text-sm">%</span>
+                  <span className="absolute right-3 top-2 text-slate-400 dark:text-slate-600 text-sm">%</span>
                 </div>
               )}
             </div>
@@ -270,8 +271,8 @@ export function TerminationForm({ onCalculate }: TerminationFormProps) {
       </SectionCard>
 
       <SectionCard title="Optional Details">
-        <div className="flex flex-col gap-3">
-          <p className="text-xs text-gray-500">
+        <div className="flex flex-col gap-4">
+          <p className="text-xs text-slate-500 dark:text-slate-400 leading-normal">
             These fields are optional. Leave blank to use derived values or skip those calculations.
           </p>
 
@@ -280,7 +281,7 @@ export function TerminationForm({ onCalculate }: TerminationFormProps) {
             hint="Your actual monthly finance repayment — leave blank to derive from lease terms above"
           >
             <div className="relative">
-              <span className="absolute left-3 top-2 text-gray-400 text-sm">$</span>
+              <span className="absolute left-3 top-2 text-slate-400 dark:text-slate-600 text-sm">$</span>
               <input
                 type="number"
                 className={inputCls + ' pl-6'}
@@ -297,7 +298,7 @@ export function TerminationForm({ onCalculate }: TerminationFormProps) {
             hint="Provider admin fee per month — charged for all remaining months on early exit"
           >
             <div className="relative">
-              <span className="absolute left-3 top-2 text-gray-400 text-sm">$</span>
+              <span className="absolute left-3 top-2 text-slate-400 dark:text-slate-600 text-sm">$</span>
               <input
                 type="number"
                 className={inputCls + ' pl-6'}
@@ -314,7 +315,7 @@ export function TerminationForm({ onCalculate }: TerminationFormProps) {
             hint="Flat exit fee charged by your provider — check your lease agreement"
           >
             <div className="relative">
-              <span className="absolute left-3 top-2 text-gray-400 text-sm">$</span>
+              <span className="absolute left-3 top-2 text-slate-400 dark:text-slate-600 text-sm">$</span>
               <input
                 type="number"
                 className={inputCls + ' pl-6'}
@@ -331,7 +332,7 @@ export function TerminationForm({ onCalculate }: TerminationFormProps) {
             hint="Estimated resale value of the vehicle today — leave blank to skip the equity calculation"
           >
             <div className="relative">
-              <span className="absolute left-3 top-2 text-gray-400 text-sm">$</span>
+              <span className="absolute left-3 top-2 text-slate-400 dark:text-slate-600 text-sm">$</span>
               <input
                 type="number"
                 className={inputCls + ' pl-6'}
@@ -360,7 +361,7 @@ export function TerminationForm({ onCalculate }: TerminationFormProps) {
 
       <button
         type="submit"
-        className="bg-blue-700 hover:bg-blue-800 text-white font-semibold rounded-xl py-3 text-base transition-colors shadow"
+        className="bg-blue-600 hover:bg-blue-700 dark:bg-cyan-600 dark:hover:bg-cyan-700 text-white font-bold rounded-xl py-3.5 text-base transition-colors shadow-md hover:shadow-lg cursor-pointer"
       >
         Calculate Early Termination Cost
       </button>

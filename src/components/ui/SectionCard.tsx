@@ -5,8 +5,8 @@ interface SectionCardProps {
 
 export function SectionCard({ title, children }: SectionCardProps) {
   return (
-    <div data-pdf-section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
-      <h3 className="text-base font-semibold text-gray-800 mb-3">{title}</h3>
+    <div data-pdf-section className="glass-panel p-5">
+      <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 mb-4">{title}</h3>
       {children}
     </div>
   )

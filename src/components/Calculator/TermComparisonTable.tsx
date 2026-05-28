@@ -36,12 +36,12 @@ export function TermComparisonTable({ results, selectedTerm, onSelectTerm }: Pro
     <div className="flex flex-col gap-4">
       <div
         className={[
-          'rounded-xl px-4 py-3 text-sm font-medium flex items-start gap-2',
+          'rounded-xl px-4 py-3 text-sm font-semibold flex items-start gap-2.5 transition-all duration-300',
           fbtStatus === 'full'
-            ? 'bg-green-50 text-green-800 border border-green-200'
+            ? 'bg-green-50 text-green-800 border border-green-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/40 glow-emerald'
             : fbtStatus === 'partial'
-              ? 'bg-blue-50 text-blue-800 border border-blue-200'
-              : 'bg-amber-50 text-amber-800 border border-amber-200',
+              ? 'bg-blue-50 text-blue-800 border border-blue-200 dark:bg-cyan-950/20 dark:text-cyan-400 dark:border-cyan-900/40 glow-cyan'
+              : 'bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/40 glow-indigo',
         ].join(' ')}
       >
         {fbtStatus === 'full' ? (
@@ -56,7 +56,7 @@ export function TermComparisonTable({ results, selectedTerm, onSelectTerm }: Pro
             <svg className="w-4 h-4 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2V4a6 6 0 110 12z" clipRule="evenodd" />
             </svg>
-            <span>Partial FBT Exemption (25% exempt) — 75% of the standard FBT is payable. A reduced post-tax ECM contribution is required.</span>
+            <span>Partial FBT Exemption (25% exempt) — 75% of standard FBT is payable. A reduced post-tax ECM contribution is required.</span>
           </>
         ) : (
           <>
@@ -68,13 +68,13 @@ export function TermComparisonTable({ results, selectedTerm, onSelectTerm }: Pro
         )}
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border overflow-x-auto">
-        <div className="p-4">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">Lease Term Comparison</h3>
+      <div className="glass-panel overflow-x-auto shadow-sm">
+        <div className="p-4 min-w-[500px]">
+          <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-3">Lease Term Comparison</h3>
           <table className="w-full text-sm">
             <thead>
               <tr>
-                <th className="text-left py-2 pr-4 text-xs text-gray-500 font-medium w-36 sticky left-0 bg-white z-10"></th>
+                <th className="text-left py-2 pr-4 text-xs text-slate-400 font-semibold w-36 sticky left-0 bg-white dark:bg-slate-900/90 z-10"></th>
                 {results.map(r => {
                   const isSelected = r.termYears === selectedTerm
                   return (
@@ -83,10 +83,10 @@ export function TermComparisonTable({ results, selectedTerm, onSelectTerm }: Pro
                         type="button"
                         onClick={() => onSelectTerm(r.termYears)}
                         className={[
-                          'w-full rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors',
+                          'w-full rounded-lg px-3 py-1.5 text-xs font-bold transition-colors cursor-pointer',
                           isSelected
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200',
+                            ? 'bg-blue-600 text-white dark:bg-cyan-600 dark:text-white'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700',
                         ].join(' ')}
                       >
                         {r.termYears} {r.termYears === 1 ? 'Year' : 'Years'}
@@ -98,11 +98,11 @@ export function TermComparisonTable({ results, selectedTerm, onSelectTerm }: Pro
             </thead>
             <tbody>
               {ROWS.map(row => (
-                <tr key={row.label} className={['border-t', row.total ? 'border-gray-300' : 'border-gray-100'].join(' ')}>
-                  <td className={['py-2.5 pr-4 text-xs sticky left-0 z-10', row.total ? 'font-semibold text-gray-700 bg-white' : 'text-gray-500 bg-white'].join(' ')}>
+                <tr key={row.label} className={['border-t', row.total ? 'border-slate-300 dark:border-slate-700' : 'border-slate-100 dark:border-slate-800'].join(' ')}>
+                  <td className={['py-2.5 pr-4 text-xs sticky left-0 z-10', row.total ? 'font-bold text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-900/90' : 'text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900/90'].join(' ')}>
                     {row.label}
                     {row.hint && (
-                      <span className="block font-normal text-gray-400">{row.hint}</span>
+                      <span className="block font-normal text-slate-400 dark:text-slate-500">{row.hint}</span>
                     )}
                   </td>
                   {results.map(r => {
@@ -113,8 +113,8 @@ export function TermComparisonTable({ results, selectedTerm, onSelectTerm }: Pro
                         className={[
                           'py-2.5 px-3 text-center text-xs tabular-nums',
                           row.total ? 'font-bold' : '',
-                          isSelected ? 'bg-blue-50 text-blue-900' : 'text-gray-800',
-                          row.total && isSelected ? 'font-bold' : '',
+                          isSelected ? 'bg-blue-50/50 text-blue-900 dark:bg-cyan-950/20 dark:text-cyan-300 font-semibold' : 'text-slate-700 dark:text-slate-300',
+                          row.total && isSelected ? 'font-extrabold text-blue-700 dark:text-cyan-400' : '',
                         ].join(' ')}
                       >
                         {row.render(r)}
@@ -125,7 +125,7 @@ export function TermComparisonTable({ results, selectedTerm, onSelectTerm }: Pro
               ))}
             </tbody>
           </table>
-          <p className="text-xs text-gray-400 mt-3">Click a column to see the full breakdown below.</p>
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-3">Click a term column header to expand details below.</p>
         </div>
       </div>
     </div>

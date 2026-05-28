@@ -22,17 +22,17 @@ export function AnalyserResults({ result }: AnalyserResultsProps) {
     : 'Unable to calculate'
 
   return (
-    <div id="pdf-analyser-results" className="flex flex-col gap-4">
+    <div id="pdf-analyser-results" className="flex flex-col gap-6">
       {/* Summary banner */}
       <div className={[
-        'rounded-xl px-4 py-3 text-sm font-medium flex items-start gap-2',
+        'rounded-xl px-4 py-3 text-sm font-semibold flex items-start gap-2.5 transition-all duration-300',
         overcharging
-          ? 'bg-red-50 text-red-800 border border-red-200'
-          : 'bg-green-50 text-green-800 border border-green-200',
+          ? 'bg-red-50 text-red-800 border border-red-200 dark:bg-rose-950/20 dark:text-rose-400 dark:border-rose-900/40 dark:shadow-[0_0_15px_rgba(244,63,94,0.15)]'
+          : 'bg-green-50 text-green-800 border border-green-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/40 glow-emerald',
       ].join(' ')}>
         {overcharging ? (
           <>
-            <svg className="w-4 h-4 mt-0.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <svg className="w-4 h-4 mt-0.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"></path>
             </svg>
             <span>Based on this analysis, you may be paying approximately {fmt(result.annualOvercharge)} more per year than a benchmark lease at your chosen rate.</span>
@@ -106,7 +106,7 @@ export function AnalyserResults({ result }: AnalyserResultsProps) {
         <ResultRow label="Residual value (ATO minimum)" value={fmt(result.residualValue)} />
       </SectionCard>
 
-      <p className="text-xs text-gray-400 text-center px-2">
+      <p className="text-xs text-slate-400 dark:text-slate-500 text-center px-2 leading-normal">
         This analysis is indicative only. Differences may reflect legitimate variations in lease structure,
         insurance inclusions, or other factors. Consult your provider or a financial adviser for detailed advice.
       </p>
