@@ -218,7 +218,7 @@ export default function App() {
           <span className="text-base font-extrabold tracking-tight bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent dark:from-cyan-400 dark:to-emerald-400 uppercase">
             Lease Calc
           </span>
-          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-slate-800 text-slate-400">v2.0</span>
+          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-slate-800 text-slate-400">v0.6.0</span>
         </div>
         <button
           onClick={handleToggleTheme}
@@ -252,7 +252,7 @@ export default function App() {
                 Lease Calc
               </span>
               <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">
-                v2.0
+                v0.6.0
               </span>
             </div>
             <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-wider font-semibold">FBT &amp; EV PACKAGING</p>
