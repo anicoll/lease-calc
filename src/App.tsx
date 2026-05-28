@@ -109,6 +109,9 @@ export default function App() {
 
   // Quote actions
   function handleSaveQuote(inputs: MultiTermLeaseInputs, label: string, rawInputs: any) {
+    if (quotes.length >= 5) {
+      return
+    }
     const newQuote: SavedQuote = {
       id: Math.random().toString(36).substring(2, 9) + '-' + Date.now(),
       label,
@@ -122,12 +125,13 @@ export default function App() {
   }
 
   function handleSaveCurrentQuote() {
-    if (currentInputs) {
+    if (currentInputs && quotes.length < 5) {
       handleSaveQuote(currentInputs, quoteLabel.trim() || 'Lease Quote', currentRawInputs)
       setSaveSuccess(true)
       setTimeout(() => setSaveSuccess(false), 3000)
     }
   }
+
 
   function handleDeleteQuote(id: string) {
     const updatedQuotes = quotes.filter(q => q.id !== id)
@@ -160,7 +164,6 @@ export default function App() {
     setSelectedQuoteIds([])
   }
 
-  const selectedQuotesForComparison = quotes.filter(q => selectedQuoteIds.includes(q.id))
 
   // Render navigation tab list item
   const renderNavItem = (tab: Tab, icon: React.ReactNode) => {
@@ -422,25 +425,36 @@ export default function App() {
 
                     {/* Quote Saving Segment */}
                     <div className="flex items-center gap-2 w-full sm:w-auto">
-                      <input
-                        type="text"
-                        placeholder="Quote label (e.g. Model Y)"
-                        value={quoteLabel}
-                        onChange={(e) => setQuoteLabel(e.target.value)}
-                        className="flex-1 sm:w-48 rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                      <button
-                        type="button"
-                        onClick={handleSaveCurrentQuote}
-                        className={[
-                          'px-4 py-1.5 rounded-lg font-bold text-xs shadow-sm transition-colors cursor-pointer whitespace-nowrap',
-                          saveSuccess
-                            ? 'bg-green-600 hover:bg-green-700 text-white'
-                            : 'bg-slate-800 hover:bg-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-200',
-                        ].join(' ')}
-                      >
-                        {saveSuccess ? 'Saved! ✓' : 'Save Quote'}
-                      </button>
+                      {quotes.length >= 5 ? (
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-semibold">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                          </svg>
+                          <span>Quote limit reached (5/5). Delete a quote to save a new one.</span>
+                        </div>
+                      ) : (
+                        <>
+                          <input
+                            type="text"
+                            placeholder="Quote label (e.g. Model Y)"
+                            value={quoteLabel}
+                            onChange={(e) => setQuoteLabel(e.target.value)}
+                            className="flex-1 sm:w-48 rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleSaveCurrentQuote}
+                            className={[
+                              'px-4 py-1.5 rounded-lg font-bold text-xs shadow-sm transition-colors cursor-pointer whitespace-nowrap',
+                              saveSuccess
+                                ? 'bg-green-600 hover:bg-green-700 text-white'
+                                : 'bg-slate-800 hover:bg-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-200',
+                            ].join(' ')}
+                          >
+                            {saveSuccess ? 'Saved! ✓' : 'Save Quote'}
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
 
@@ -475,7 +489,9 @@ export default function App() {
             />
           ) : activeTab === 'compare' ? (
             <QuoteComparison
-              selectedQuotes={selectedQuotesForComparison}
+              quotes={quotes}
+              selectedQuoteIds={selectedQuoteIds}
+              onToggleSelect={handleToggleSelectQuote}
               onClearSelection={handleClearQuotesSelection}
             />
           ) : activeTab === 'analyser' ? (
